@@ -109,7 +109,7 @@ export default async function Dashboard() {
             )}
           </Card>
         </div>
-        <Card title="Índice CAC">
+        <Card title="Índice de la Construccion - CAC">
           {cacHistorico?.length ? (
             (() => {
               const ultimo = cacHistorico.at(-1);
@@ -124,12 +124,31 @@ export default async function Dashboard() {
 
               return (
                 <>
-                  <p className="text-2xl font-semibold">
+                  {/* GENERAL */}
+                  <p className="text-3xl font-bold mb-1">
                     {ultimo.general.toLocaleString("es-AR")}
                   </p>
-                  <small>
+
+                  <small className="text-gray-500 block mb-3">
                     {mes} de {año}
                   </small>
+
+                  {/* DETALLE */}
+                  <div className="space-y-1 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Materiales</span>
+                      <span className="font-medium">
+                        {ultimo.materials.toLocaleString("es-AR")}
+                      </span>
+                    </div>
+
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Mano de obra</span>
+                      <span className="font-medium">
+                        {ultimo.labour_force.toLocaleString("es-AR")}
+                      </span>
+                    </div>
+                  </div>
                 </>
               );
             })()
