@@ -8,7 +8,7 @@ export async function getDolares() {
   if (!res.ok) {
     throw new Error("Error obteniendo dólares");
   }
-  console.log(res);
+
   return res.json();
 }
 

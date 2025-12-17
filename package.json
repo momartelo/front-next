@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "next dev",
+    "dev": "cross-env NODE_TLS_REJECT_UNAUTHORIZED=0 next dev --no-turbo",
     "build": "next build",
     "start": "next start",
     "lint": "eslint"
@@ -12,6 +12,7 @@
   "dependencies": {
     "cheerio": "^1.1.2",
     "next": "16.0.10",
+    "papaparse": "^5.5.3",
     "react": "19.2.1",
     "react-dom": "19.2.1",
     "recharts": "^3.6.0"
@@ -19,6 +20,7 @@
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "autoprefixer": "^10.4.23",
+    "cross-env": "^10.1.0",
     "eslint": "^9",
     "eslint-config-next": "16.0.10",
     "postcss": "^8.5.6",

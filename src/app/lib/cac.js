@@ -11,8 +11,6 @@ export async function getCACHistorico() {
 
   // Ordenamos por fecha por las dudas
   data.sort((a, b) => new Date(a.period) - new Date(b.period));
-  console.log("CAC TOTAL:", data.length);
-  console.log("CAC SAMPLE:", data.slice(0, 3));
-  console.log("CAC LAST:", data.at(-1));
+
   return data;
 }
