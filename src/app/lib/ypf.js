@@ -1,6 +1,3 @@
-const DATASET_URL =
-  "https://datos.energia.gob.ar/api/3/action/datastore_search?resource_id=80ac25de-a44a-4445-9215-090cf55cfda5&limit=5000";
-
 const normalize = (v) =>
   String(v || "")
     .toLowerCase()
@@ -61,14 +58,12 @@ function buildEmpresa(records, empresaKey, nombre) {
     .filter(Boolean)
     .map((x) => new Date(x.fecha).getTime());
 
-  const fechaActualizacion = fechas.length
-    ? new Date(Math.max(...fechas)).toISOString().slice(0, 10)
-    : null;
-
   return {
     empresa: nombre,
     localidad: "Mar del Plata",
-    fechaActualizacion,
+    fechaActualizacion: fechas.length
+      ? new Date(Math.max(...fechas)).toISOString().slice(0, 10)
+      : null,
     nafta: {
       super: naftaSuper?.precio ?? null,
       premium: naftaPremium?.precio ?? null,
@@ -81,17 +76,22 @@ function buildEmpresa(records, empresaKey, nombre) {
 }
 
 export async function getCombustiblesMarDelPlata() {
-  const res = await fetch(DATASET_URL, { cache: "no-store" });
+  try {
+    const res = await fetch("http://localhost:3000/api/combustibles", {
+      cache: "no-store",
+    });
 
-  if (!res.ok) return null;
+    if (!res.ok) return null;
 
-  const json = await res.json();
-  const records = json?.result?.records || [];
+    const { records } = await res.json();
 
-  return {
-    ypf: buildEmpresa(records, "ypf", "YPF"),
-    shell: buildEmpresa(records, "shell", "Shell"),
-  };
+    return {
+      ypf: buildEmpresa(records, "ypf", "YPF"),
+      shell: buildEmpresa(records, "shell", "Shell"),
+    };
+  } catch {
+    return null;
+  }
 }
 
 // import Papa from "papaparse";
