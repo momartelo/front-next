@@ -1,3 +1,6 @@
+const DATASET_URL =
+  "https://datos.energia.gob.ar/api/3/action/datastore_search?resource_id=80ac25de-a44a-4445-9215-090cf55cfda5&limit=5000";
+
 const normalize = (v) =>
   String(v || "")
     .toLowerCase()
@@ -67,24 +70,23 @@ function buildEmpresa(records, empresaKey, nombre) {
     localidad: "Mar del Plata",
     fechaActualizacion,
     nafta: {
-      super: naftaSuper ? naftaSuper.precio : null,
-      premium: naftaPremium ? naftaPremium.precio : null,
+      super: naftaSuper?.precio ?? null,
+      premium: naftaPremium?.precio ?? null,
     },
     gasoil: {
-      comun: gasoilComun ? gasoilComun.precio : null,
-      premium: gasoilPremium ? gasoilPremium.precio : null,
+      comun: gasoilComun?.precio ?? null,
+      premium: gasoilPremium?.precio ?? null,
     },
   };
 }
 
 export async function getCombustiblesMarDelPlata() {
-  const res = await fetch("/api/combustibles", {
-    cache: "no-store",
-  });
+  const res = await fetch(DATASET_URL, { cache: "no-store" });
 
   if (!res.ok) return null;
 
-  const { records } = await res.json();
+  const json = await res.json();
+  const records = json?.result?.records || [];
 
   return {
     ypf: buildEmpresa(records, "ypf", "YPF"),
