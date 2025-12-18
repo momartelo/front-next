@@ -7,7 +7,7 @@ export default function CACSelector({ cacHistorico, ultimoCAC }) {
   const [selectedYear, setSelectedYear] = useState(null);
   const [selectedMonth, setSelectedMonth] = useState(null);
   const [baseAmount, setBaseAmount] = useState("");
-  const [indice, setIndice] = useState("general"); // 👈 nuevo
+  const [indice, setIndice] = useState("general");
 
   const availablePeriods = useMemo(() => {
     return cacHistorico.map((item) => {
@@ -61,44 +61,44 @@ export default function CACSelector({ cacHistorico, ultimoCAC }) {
     }
   }, [selectedCAC]);
 
+  // Clase común para los selects e inputs para forzar visibilidad
+  const inputClassName =
+    "w-full border border-gray-300 rounded p-2 bg-white text-gray-900 focus:ring-2 focus:ring-blue-500 outline-none";
+
   return (
     <Card title="Índice CAC por período">
       <div className="space-y-4 mt-2">
         {/* SELECTORES AÑO / MES */}
         <div className="flex gap-4">
           <select
-            className="w-full border rounded p-2 bg-white"
+            className={inputClassName}
             value={selectedYear ?? ""}
             onChange={(e) => {
               setSelectedYear(Number(e.target.value));
               setSelectedMonth(null);
             }}
           >
-            <option value="">Seleccionar año</option>
+            <option value="" className="text-gray-900">
+              Año
+            </option>
             {years.map((year) => (
-              <option key={year} value={year}>
+              <option key={year} value={year} className="text-gray-900">
                 {year}
               </option>
             ))}
           </select>
 
           <select
-            className="w-full border rounded p-2 bg-white"
+            className={inputClassName}
             value={selectedMonth ?? ""}
             onChange={(e) => setSelectedMonth(Number(e.target.value))}
             disabled={!selectedYear}
           >
-            <option value="" title="Elegí primero el mes">
-              Seleccionar mes
+            <option value="" className="text-gray-900">
+              Mes
             </option>
             {months.map((month) => (
-              <option
-                key={month}
-                value={month}
-                title={`Mes ${new Date(2000, month).toLocaleString("es-AR", {
-                  month: "long",
-                })}`}
-              >
+              <option key={month} value={month} className="text-gray-900">
                 {new Date(2000, month).toLocaleString("es-AR", {
                   month: "long",
                 })}
@@ -108,7 +108,7 @@ export default function CACSelector({ cacHistorico, ultimoCAC }) {
         </div>
 
         {selectedCAC ? (
-          <div className="pt-3 border-t space-y-3">
+          <div className="pt-3 border-t border-gray-200 space-y-3">
             {/* ÍNDICE PRINCIPAL */}
             <p className="text-3xl font-bold text-blue-600 text-center">
               {formatNumber(selectedCAC[indice])}
@@ -117,43 +117,47 @@ export default function CACSelector({ cacHistorico, ultimoCAC }) {
             {/* OTROS ÍNDICES */}
             <div className="flex justify-center gap-6 text-sm text-gray-500">
               {indice !== "general" && (
-                <span>General: {formatNumber(selectedCAC.general)}</span>
+                <span>Gral: {formatNumber(selectedCAC.general)}</span>
               )}
               {indice !== "materials" && (
-                <span>Materiales: {formatNumber(selectedCAC.materials)}</span>
+                <span>Mat: {formatNumber(selectedCAC.materials)}</span>
               )}
               {indice !== "labour_force" && (
-                <span>
-                  Mano de obra: {formatNumber(selectedCAC.labour_force)}
-                </span>
+                <span>Mano Obra: {formatNumber(selectedCAC.labour_force)}</span>
               )}
             </div>
 
             {/* SELECTOR DE ÍNDICE */}
             <div>
-              <label className="block text-sm font-medium mb-1">
+              <label className="block text-sm font-medium mb-1 text-gray-700">
                 Tipo de índice
               </label>
               <select
-                className="w-full border rounded p-2 bg-white"
+                className={inputClassName}
                 value={indice}
                 onChange={(e) => setIndice(e.target.value)}
               >
-                <option value="general">General</option>
-                <option value="materials">Materiales</option>
-                <option value="labour_force">Mano de obra</option>
+                <option value="general" className="text-gray-900">
+                  General
+                </option>
+                <option value="materials" className="text-gray-900">
+                  Materiales
+                </option>
+                <option value="labour_force" className="text-gray-900">
+                  Mano de obra
+                </option>
               </select>
             </div>
 
             {/* MONTO BASE */}
             <div>
-              <label className="block text-sm font-medium mb-1">
+              <label className="block text-sm font-medium mb-1 text-gray-700">
                 Monto a actualizar
               </label>
               <input
                 type="number"
                 placeholder="Ej: 100000"
-                className="w-full border rounded p-2"
+                className={inputClassName}
                 value={baseAmount}
                 onChange={(e) => setBaseAmount(e.target.value)}
               />
@@ -161,19 +165,19 @@ export default function CACSelector({ cacHistorico, ultimoCAC }) {
 
             {/* RESULTADO */}
             {updatedAmount && (
-              <div className="pt-2 text-center">
-                <p className="text-sm text-gray-500">
-                  Monto actualizado por CAC actual
+              <div className="pt-2 text-center bg-green-50 rounded-lg py-3 border border-green-100">
+                <p className="text-xs text-green-700 font-medium uppercase tracking-wider">
+                  Monto actualizado
                 </p>
-                <p className="text-xl font-semibold text-green-600">
+                <p className="text-2xl font-bold text-green-600">
                   ${formatNumber(updatedAmount)}
                 </p>
               </div>
             )}
           </div>
         ) : (
-          <p className="text-gray-400 text-sm pt-2">
-            Seleccioná un año y luego el mes
+          <p className="text-gray-400 text-sm pt-2 text-center italic">
+            Seleccioná un año y mes para calcular
           </p>
         )}
       </div>
