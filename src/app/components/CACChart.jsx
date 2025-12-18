@@ -58,14 +58,14 @@ export default function CACChart({ data }) {
           <XAxis dataKey="label" />
           <YAxis tickFormatter={(v) => v.toLocaleString("es-AR")} />
           <Tooltip content={<CustomTooltip />} />
-          <Legend />
+          <Legend iconSize={12} wrapperStyle={{ fontSize: 12 }} />
           <Line
             type="monotone"
             dataKey="general"
             name="General"
             stroke="#1d4ed8" // azul fuerte
-            strokeWidth={3}
-            dot={{ r: 3 }}
+            strokeWidth={1}
+            dot={{ r: 1 }}
           />
 
           <Line
@@ -73,8 +73,8 @@ export default function CACChart({ data }) {
             dataKey="materials"
             name="Materiales"
             stroke="#16a34a" // verde
-            strokeWidth={2}
-            dot={{ r: 2 }}
+            strokeWidth={1}
+            dot={{ r: 1 }}
           />
 
           <Line
@@ -82,8 +82,8 @@ export default function CACChart({ data }) {
             dataKey="labour_force"
             name="Mano de obra"
             stroke="#dc2626" // rojo
-            strokeWidth={2}
-            dot={{ r: 2 }}
+            strokeWidth={1}
+            dot={{ r: 1 }}
           />
         </LineChart>
       </ResponsiveContainer>

@@ -80,7 +80,7 @@ export default async function Dashboard() {
 
         {/* EURO / REAL */}
         <div className="flex flex-col gap-4 ">
-          <div className="flex gap-4 justify-evenly border border-gray-200 rounded-lg ">
+          <div className="flex gap-16  border border-gray-200 rounded-lg ">
             <Card
               title={<span className="font-semibold">Euro</span>}
               noBorder
@@ -124,9 +124,13 @@ export default async function Dashboard() {
               </span>
             }
           >
-            {combustibles && (combustibles.ypf || combustibles.shell) ? (
+            {combustibles &&
+            (combustibles.ypf ||
+              combustibles.shell ||
+              combustibles.axion ||
+              combustibles.puma) ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {["ypf", "shell"].map((key) => {
+                {["ypf", "shell", "axion", "puma"].map((key) => {
                   const e = combustibles[key];
                   if (!e) return null;
 
@@ -144,7 +148,8 @@ export default async function Dashboard() {
                         </p>
                       </div>
                       <small className="text-gray-400 text-xs">
-                        Actualizado al: {e.fechaActualizacion}
+                        Actualizado al:{" "}
+                        {formatFechaHora(e.fechaActualizacion)?.fecha || "-"}
                       </small>
                     </div>
                   );
