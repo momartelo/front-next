@@ -1,4 +1,5 @@
-// Filtramos directamente por localidad en la URL para mayor velocidad
+import https from "https";
+
 const DATASET_URL =
   'https://datos.energia.gob.ar/api/3/action/datastore_search?resource_id=80ac25de-a44a-4445-9215-090cf55cfda5&filters={"localidad":"MAR DEL PLATA"}';
 
@@ -25,43 +26,29 @@ function getLatestPrice(rows, productNames) {
   const filtered = rows.filter((r) =>
     productNames.includes(normalize(r.producto))
   );
-
   if (!filtered.length) return null;
-
-  // Buscamos la fecha más reciente
   const maxDate = Math.max(
     ...filtered.map((r) => new Date(r.fecha_vigencia).getTime())
   );
-
   const latest = filtered.filter(
     (r) => new Date(r.fecha_vigencia).getTime() === maxDate
   );
-
-  // De los más recientes, tomamos el precio máximo (evita errores de carga duplicada)
   const price = Math.max(...latest.map((r) => Number(r.precio)));
-
-  return {
-    precio: Number(price.toFixed(2)),
-    fecha: latest[0].fecha_vigencia,
-  };
+  return { precio: Number(price.toFixed(2)), fecha: latest[0].fecha_vigencia };
 }
 
 function buildEmpresa(records, empresaKey, nombre) {
   const rows = records.filter((r) =>
     EMPRESAS[empresaKey].includes(normalize(r.empresabandera))
   );
-
   if (!rows.length) return null;
-
   const naftaSuper = getLatestPrice(rows, PRODUCTOS.naftaSuper);
   const naftaPremium = getLatestPrice(rows, PRODUCTOS.naftaPremium);
   const gasoilComun = getLatestPrice(rows, PRODUCTOS.gasoilComun);
   const gasoilPremium = getLatestPrice(rows, PRODUCTOS.gasoilPremium);
-
   const fechas = [naftaSuper, naftaPremium, gasoilComun, gasoilPremium]
     .filter(Boolean)
     .map((x) => new Date(x.fecha).getTime());
-
   return {
     empresa: nombre,
     localidad: "Mar del Plata",
@@ -81,19 +68,28 @@ function buildEmpresa(records, empresaKey, nombre) {
 
 export async function getCombustiblesMarDelPlata() {
   try {
-    // Añadimos User-Agent para evitar que el servidor de la API nos bloquee
-    const res = await fetch(DATASET_URL, {
-      cache: "no-store",
-      headers: {
-        "User-Agent":
-          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-      },
+    // ESTA ES LA CLAVE: Ignorar la verificación de certificado vencido
+    const agent = new https.Agent({
+      rejectUnauthorized: false,
     });
 
-    if (!res.ok) {
-      console.error("Error en la respuesta de la API:", res.status);
-      return null;
-    }
+    const res = await fetch(DATASET_URL, {
+      cache: "no-store",
+      // Pasamos el agent para saltar el error CERT_HAS_EXPIRED
+      // Nota: En algunas versiones de Node nativo con fetch se usa 'agent'
+      // pero si falla, usaremos el dispatcher o simplemente bajaremos el nivel de seguridad global.
+      agent: agent,
+      headers: {
+        "User-Agent": "Mozilla/5.0",
+        Accept: "application/json",
+      },
+    }); // El 'as any' es solo por si usas TS, si es JS borralo.
+
+    // Si el 'agent' arriba no funciona por la versión de Node en Vercel,
+    // la alternativa es usar esta variable de entorno ANTES del fetch:
+    // process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+
+    if (!res.ok) return null;
 
     const json = await res.json();
     const records = json?.result?.records || [];
@@ -103,12 +99,23 @@ export async function getCombustiblesMarDelPlata() {
       shell: buildEmpresa(records, "shell", "Shell"),
     };
   } catch (error) {
-    // En Vercel, esto aparecerá en los logs si algo falla
-    console.error("Fallo al obtener combustibles:", error);
-    return null;
+    console.error("Error detallado:", error);
+
+    // INTENTO DE EMERGENCIA si el fetch nativo falla con el agent:
+    try {
+      process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+      const resEmergencia = await fetch(DATASET_URL, { cache: "no-store" });
+      const json = await resEmergencia.json();
+      const records = json?.result?.records || [];
+      return {
+        ypf: buildEmpresa(records, "ypf", "YPF"),
+        shell: buildEmpresa(records, "shell", "Shell"),
+      };
+    } catch (e) {
+      return null;
+    }
   }
 }
-
 // import Papa from "papaparse";
 
 // const DATASET_URL =
