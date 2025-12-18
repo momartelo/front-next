@@ -117,13 +117,15 @@ export default function CACSelector({ cacHistorico, ultimoCAC }) {
             {/* OTROS ÍNDICES */}
             <div className="flex justify-center gap-6 text-sm text-gray-500">
               {indice !== "general" && (
-                <span>Gral: {formatNumber(selectedCAC.general)}</span>
+                <span>General: {formatNumber(selectedCAC.general)}</span>
               )}
               {indice !== "materials" && (
-                <span>Mat: {formatNumber(selectedCAC.materials)}</span>
+                <span>Materiales: {formatNumber(selectedCAC.materials)}</span>
               )}
               {indice !== "labour_force" && (
-                <span>Mano Obra: {formatNumber(selectedCAC.labour_force)}</span>
+                <span>
+                  Mano de Obra: {formatNumber(selectedCAC.labour_force)}
+                </span>
               )}
             </div>
 
@@ -177,7 +179,7 @@ export default function CACSelector({ cacHistorico, ultimoCAC }) {
           </div>
         ) : (
           <p className="text-gray-400 text-sm pt-2 text-center italic">
-            Seleccioná un año y mes para calcular
+            Seleccioná un año y luego un mes para calcular
           </p>
         )}
       </div>

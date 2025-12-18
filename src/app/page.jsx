@@ -143,8 +143,8 @@ export default async function Dashboard() {
                           Gasoil Premium: ${e.gasoil.premium?.toFixed(2) ?? "-"}
                         </p>
                       </div>
-                      <small className="text-gray-400 text-[10px]">
-                        Act: {e.fechaActualizacion}
+                      <small className="text-gray-400 text-xs">
+                        Actualizado al: {e.fechaActualizacion}
                       </small>
                     </div>
                   );
