@@ -9,10 +9,10 @@ import { formatFechaHora } from "./lib/date";
 import { getCACHistorico } from "./lib/cac";
 import CACChart from "./components/CACChart";
 import CACSelector from "./components/CACSelector";
-
 import { getCombustiblesMarDelPlata } from "./lib/ypf";
 
 export default async function Dashboard() {
+  // Manejo de errores con Promise.allSettled para que si una API falla, el resto cargue
   const [
     dolares,
     euro,
@@ -43,7 +43,7 @@ export default async function Dashboard() {
       : "text-green-600"
     : "";
 
-  const cacUltimos12 = cacHistorico.slice(-12);
+  const cacUltimos12 = (cacHistorico || []).slice(-12);
 
   const formatNumber = (value) =>
     Number(value).toLocaleString("es-AR", {
@@ -51,7 +51,7 @@ export default async function Dashboard() {
       maximumFractionDigits: 2,
     });
 
-  const ultimoCAC = cacHistorico.length ? cacHistorico.at(-1) : null;
+  const ultimoCAC = cacHistorico?.length ? cacHistorico.at(-1) : null;
 
   return (
     <main className="p-6 max-w-7xl mx-auto">
@@ -62,7 +62,7 @@ export default async function Dashboard() {
       <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_0.4fr]">
         {/* DÓLARES */}
         <Card title="Dólares">
-          {dolares.map((d) => {
+          {dolares?.map((d) => {
             const fecha = getFechaFormateada(d);
             return (
               <div key={d.casa} className="border-b last:border-0 py-2">
@@ -86,13 +86,15 @@ export default async function Dashboard() {
               noBorder
               titleCenter={false}
             >
-              <p className="text-sm">Compra: ${euro.compra.toFixed(2)}</p>
-              <p className="text-sm">Venta: ${euro.venta.toFixed(2)}</p>
+              <p className="text-sm">
+                Compra: ${euro?.compra?.toFixed(2) ?? "-"}
+              </p>
+              <p className="text-sm">
+                Venta: ${euro?.venta?.toFixed(2) ?? "-"}
+              </p>
               <small className="text-gray-500 flex flex-wrap">
-                <span>Fecha de actualización:</span>
-                <span>
-                  {fechaEuro ? `${fechaEuro.fecha} ${fechaEuro.hora}` : "-"}
-                </span>
+                <span>Fecha:</span>
+                <span>{fechaEuro ? `${fechaEuro.fecha}` : "-"}</span>
               </small>
             </Card>
 
@@ -101,16 +103,20 @@ export default async function Dashboard() {
               noBorder
               titleCenter={false}
             >
-              <p className="text-sm">Compra: ${real.compra.toFixed(2)}</p>
-              <p className="text-sm">Venta: ${real.venta.toFixed(2)}</p>
+              <p className="text-sm">
+                Compra: ${real?.compra?.toFixed(2) ?? "-"}
+              </p>
+              <p className="text-sm">
+                Venta: ${real?.venta?.toFixed(2) ?? "-"}
+              </p>
               <small className="text-gray-500 flex flex-wrap">
-                <span>Fecha de actualización:</span>
-                <span>
-                  {fechaReal ? `${fechaReal.fecha} ${fechaReal.hora}` : "-"}
-                </span>
+                <span>Fecha:</span>
+                <span>{fechaReal ? `${fechaReal.fecha}` : "-"}</span>
               </small>
             </Card>
           </div>
+
+          {/* COMBUSTIBLES */}
           <Card
             title={
               <span className="block w-full text-center pb-4 font-semibold">
@@ -118,7 +124,7 @@ export default async function Dashboard() {
               </span>
             }
           >
-            {combustibles ? (
+            {combustibles && (combustibles.ypf || combustibles.shell) ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {["ypf", "shell"].map((key) => {
                   const e = combustibles[key];
@@ -126,8 +132,7 @@ export default async function Dashboard() {
 
                   return (
                     <div key={key} className="pb-2">
-                      <p className="font-semibold">{e.empresa}</p>
-
+                      <p className="font-semibold text-blue-700">{e.empresa}</p>
                       <div className="mt-1 text-sm">
                         <p>Nafta Súper: ${e.nafta.super?.toFixed(2) ?? "-"}</p>
                         <p>
@@ -138,15 +143,17 @@ export default async function Dashboard() {
                           Gasoil Premium: ${e.gasoil.premium?.toFixed(2) ?? "-"}
                         </p>
                       </div>
-                      <small className="text-gray-500">
-                        Ult. Actualizacion: {e.fechaActualizacion}
+                      <small className="text-gray-400 text-[10px]">
+                        Act: {e.fechaActualizacion}
                       </small>
                     </div>
                   );
                 })}
               </div>
             ) : (
-              <p className="text-gray-400">No disponible</p>
+              <p className="text-gray-400 text-center">
+                Datos no disponibles hoy
+              </p>
             )}
           </Card>
         </div>
@@ -180,62 +187,42 @@ export default async function Dashboard() {
           </Card>
         </div>
 
-        {/* CAC ACTUAL + GRÁFICO */}
+        {/* CAC */}
         <div className="flex flex-col">
           <Card title="Índice de la Construcción - CAC">
-            {cacHistorico.length ? (
-              (() => {
-                const ultimo = cacHistorico.at(-1);
-                const date = new Date(ultimo.period);
-
-                const mes = date.toLocaleString("es-AR", {
-                  month: "long",
-                  timeZone: "UTC",
-                });
-                const año = date.getUTCFullYear();
-
-                return (
-                  <>
-                    <p className="text-3xl font-bold mb-1 text-center mt-1 text-blue-600">
-                      {formatNumber(ultimo.general)}
-                    </p>
-
-                    <small className="text-gray-500 block mb-3 text-center">
-                      {mes} de {año}
-                    </small>
-
-                    <div className="space-y-1 text-sm">
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Materiales</span>
-                        <span className="font-medium">
-                          {formatNumber(ultimo.materials)}
-                        </span>
-                      </div>
-
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Mano de obra</span>
-                        <span className="font-medium">
-                          {formatNumber(ultimo.labour_force)}
-                        </span>
-                      </div>
-                    </div>
-                  </>
-                );
-              })()
+            {ultimoCAC ? (
+              <>
+                <p className="text-3xl font-bold mb-1 text-center mt-1 text-blue-600">
+                  {formatNumber(ultimoCAC.general)}
+                </p>
+                <div className="space-y-1 text-sm mt-2">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Materiales</span>
+                    <span className="font-medium">
+                      {formatNumber(ultimoCAC.materials)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Mano de obra</span>
+                    <span className="font-medium">
+                      {formatNumber(ultimoCAC.labour_force)}
+                    </span>
+                  </div>
+                </div>
+              </>
             ) : (
               <p className="text-gray-400">No disponible</p>
             )}
           </Card>
 
           <section className="mt-4">
-            <Card title="Evolución Índice CAC (últimos 12 meses)">
+            <Card title="Evolución CAC">
               <CACChart data={cacUltimos12} />
             </Card>
           </section>
         </div>
 
-        {/* SELECTOR CAC */}
-        <CACSelector cacHistorico={cacHistorico} ultimoCAC={ultimoCAC} />
+        <CACSelector cacHistorico={cacHistorico || []} ultimoCAC={ultimoCAC} />
       </section>
     </main>
   );
