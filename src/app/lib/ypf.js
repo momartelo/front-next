@@ -77,7 +77,7 @@ function buildEmpresa(records, empresaKey, nombre) {
 
 export async function getCombustiblesMarDelPlata() {
   try {
-    const res = await fetch("http://localhost:3000/api/combustibles", {
+    const res = await fetch("/api/combustibles", {
       cache: "no-store",
     });
 
