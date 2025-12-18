@@ -78,12 +78,9 @@ function buildEmpresa(records, empresaKey, nombre) {
 }
 
 export async function getCombustiblesMarDelPlata() {
-  const res = await fetch(
-    `${
-      process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"
-    }/api/combustibles`,
-    { cache: "no-store" }
-  );
+  const res = await fetch("/api/combustibles", {
+    cache: "no-store",
+  });
 
   if (!res.ok) return null;
 

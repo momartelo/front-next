@@ -1,3 +1,5 @@
+import { NextResponse } from "next/server";
+
 export async function GET() {
   try {
     const res = await fetch(
@@ -6,17 +8,17 @@ export async function GET() {
     );
 
     if (!res.ok) {
-      return Response.json({ error: "Fetch failed" }, { status: 500 });
+      return NextResponse.json({ error: "Fetch failed" }, { status: 500 });
     }
 
     const json = await res.json();
     const records = json?.result?.records || [];
 
-    return Response.json({ records });
+    return NextResponse.json({ records });
   } catch (error) {
     console.error("Error combustibles API:", error);
-    return Response.json(
-      { error: "SSL error datos.energia.gob.ar" },
+    return NextResponse.json(
+      { error: "Error consultando datos.energia.gob.ar" },
       { status: 500 }
     );
   }
