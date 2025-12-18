@@ -1,3 +1,4 @@
+export const runtime = "nodejs";
 import Card from "./components/Card";
 import { getDolares, getEuro, getReal } from "./lib/dolar";
 import {
