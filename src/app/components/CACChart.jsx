@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import {
   LineChart,
   Line,
@@ -11,6 +12,13 @@ import {
 } from "recharts";
 
 export default function CACChart({ data }) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted || !data?.length) return null;
   // Formateamos fecha para eje X
   const formattedData = data.map((item) => ({
     ...item,
@@ -44,8 +52,8 @@ export default function CACChart({ data }) {
   }
 
   return (
-    <div className="w-full h-80">
-      <ResponsiveContainer width="100%" height="100%">
+    <div className="w-full">
+      <ResponsiveContainer width="100%" aspect={2.5}>
         <LineChart data={formattedData}>
           <XAxis dataKey="label" />
           <YAxis tickFormatter={(v) => v.toLocaleString("es-AR")} />

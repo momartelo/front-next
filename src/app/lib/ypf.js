@@ -1,6 +1,3 @@
-const DATASET_URL =
-  "https://datos.energia.gob.ar/api/3/action/datastore_search?resource_id=80ac25de-a44a-4445-9215-090cf55cfda5&limit=5000";
-
 const normalize = (v) =>
   String(v || "")
     .toLowerCase()
@@ -81,11 +78,16 @@ function buildEmpresa(records, empresaKey, nombre) {
 }
 
 export async function getCombustiblesMarDelPlata() {
-  const res = await fetch(DATASET_URL, { cache: "no-store" });
+  const res = await fetch(
+    `${
+      process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"
+    }/api/combustibles`,
+    { cache: "no-store" }
+  );
+
   if (!res.ok) return null;
 
-  const json = await res.json();
-  const records = json?.result?.records || [];
+  const { records } = await res.json();
 
   return {
     ypf: buildEmpresa(records, "ypf", "YPF"),
