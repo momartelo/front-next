@@ -2,7 +2,7 @@ import https from "https";
 
 // Volvemos a filtrar por Mar del Plata en la URL para que la API nos de solo lo que necesitamos
 const DATASET_URL =
-  'https://datos.energia.gob.ar/api/3/action/datastore_search?resource_id=80ac25de-a44a-4445-9215-090cf55cfda5&filters={"localidad":"MAR DEL PLATA"}';
+  'http://datos.energia.gob.ar/api/3/action/datastore_search?resource_id=80ac25de-a44a-4445-9215-090cf55cfda5&filters={"localidad":"MAR DEL PLATA"}';
 
 const normalize = (v) =>
   String(v || "")
