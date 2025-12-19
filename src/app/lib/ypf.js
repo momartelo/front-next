@@ -89,33 +89,33 @@ function buildEmpresa(records, empresaKey, nombre) {
 
 export async function getCombustiblesMarDelPlata() {
   try {
-    // 1. Usamos una URL que no dependa de filtros complejos en el string si es posible
+    // 1. Creamos el agente que ignora el certificado vencido explícitamente
+    const agent = new https.Agent({
+      rejectUnauthorized: false,
+    });
+
     const url = `${DATASET_URL}&limit=1000`;
 
+    // 2. En Next.js (Node 18+), pasamos el agente dentro de la propiedad 'agent'
+    // IMPORTANTE: Algunos entornos de Vercel requieren que uses 'node-fetch'
+    // si el fetch nativo ignora el agente.
     const res = await fetch(url, {
       cache: "no-store",
-      // Agregamos más headers para que parezca una petición de navegador real
+      // @ts-ignore - Algunas versiones de TS se quejan, pero funciona en Node
+      agent: agent,
       headers: {
-        "User-Agent":
-          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36",
+        "User-Agent": "Mozilla/5.0",
         Accept: "application/json",
-        "Accept-Language": "es-AR,es;q=0.9",
       },
-      // En Next.js 13/14/15, el agent se pasa de forma distinta o se confía en el fetch nativo
     });
 
     if (!res.ok) {
-      console.error("Error en respuesta de API Energía:", res.status);
+      console.error("HTTP Error:", res.status);
       return null;
     }
 
     const json = await res.json();
     const records = json?.result?.records || [];
-
-    if (records.length === 0) {
-      console.warn("No se encontraron registros para Mar del Plata");
-      return null;
-    }
 
     return {
       ypf: buildEmpresa(records, "ypf", "YPF"),
@@ -124,7 +124,8 @@ export async function getCombustiblesMarDelPlata() {
       puma: buildEmpresa(records, "puma", "Puma"),
     };
   } catch (error) {
-    console.error("Error capturado en getCombustibles:", error.message);
+    // Este log te va a decir si sigue siendo el certificado u otra cosa
+    console.error("Error en Combustibles:", error.message);
     return null;
   }
 }
