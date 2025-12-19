@@ -55,8 +55,19 @@ export default function CACChart({ data }) {
     <div className="w-full">
       <ResponsiveContainer width="100%" aspect={2.5}>
         <LineChart data={formattedData}>
-          <XAxis dataKey="label" />
-          <YAxis tickFormatter={(v) => v.toLocaleString("es-AR")} />
+          <XAxis
+            dataKey="label"
+            // Aquí definimos el estilo del texto
+            tick={{ fontSize: 12, fill: "#6b7280" }}
+            tickLine={false}
+            axisLine={true}
+          />
+          <YAxis
+            // Aplicamos el mismo estilo o uno diferente
+            tick={{ fontSize: 12, fill: "#6b7280" }}
+            tickFormatter={(v) => v.toLocaleString("es-AR")}
+            width={80} // Aumenta el ancho si el texto es muy grande para que no se corte
+          />
           <Tooltip content={<CustomTooltip />} />
           <Legend iconSize={12} wrapperStyle={{ fontSize: 12 }} />
           <Line
