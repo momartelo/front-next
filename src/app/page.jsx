@@ -53,6 +53,13 @@ export default async function Dashboard() {
 
   const ultimoCAC = cacHistorico?.length ? cacHistorico.at(-1) : null;
 
+  const LOGOS = {
+    ypf: "/logos/ypf.png",
+    shell: "/logos/shell.png",
+    axion: "/logos/axion.png",
+    puma: "/logos/puma.png",
+  };
+
   return (
     <main className="p-6 max-w-7xl mx-auto">
       <h1 className="text-3xl font-semibold mb-6 text-center">
@@ -136,7 +143,17 @@ export default async function Dashboard() {
 
                   return (
                     <div key={key} className="pb-2">
-                      <p className="font-semibold text-blue-700">{e.empresa}</p>
+                      <div className="flex items-center gap-2 mb-1">
+                        <img
+                          src={LOGOS[key]}
+                          alt=""
+                          className="h-5 w-auto object-contain"
+                          // Borramos la línea del onError que causaba el error
+                        />
+                        <p className="font-semibold text-blue-700">
+                          {e.empresa}
+                        </p>
+                      </div>
                       <div className="mt-1 text-sm">
                         <p>Nafta Súper: ${e.nafta.super?.toFixed(2) ?? "-"}</p>
                         <p>
