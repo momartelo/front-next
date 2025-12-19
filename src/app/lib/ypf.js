@@ -89,18 +89,33 @@ function buildEmpresa(records, empresaKey, nombre) {
 
 export async function getCombustiblesMarDelPlata() {
   try {
-    const agent = new https.Agent({ rejectUnauthorized: false });
+    // 1. Usamos una URL que no dependa de filtros complejos en el string si es posible
+    const url = `${DATASET_URL}&limit=1000`;
 
-    // Pedimos 1000 para Mar del Plata (sobra espacio)
-    const res = await fetch(`${DATASET_URL}&limit=1000`, {
+    const res = await fetch(url, {
       cache: "no-store",
-      agent: agent,
-      headers: { "User-Agent": "Mozilla/5.0", Accept: "application/json" },
+      // Agregamos más headers para que parezca una petición de navegador real
+      headers: {
+        "User-Agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36",
+        Accept: "application/json",
+        "Accept-Language": "es-AR,es;q=0.9",
+      },
+      // En Next.js 13/14/15, el agent se pasa de forma distinta o se confía en el fetch nativo
     });
 
-    if (!res.ok) return null;
+    if (!res.ok) {
+      console.error("Error en respuesta de API Energía:", res.status);
+      return null;
+    }
+
     const json = await res.json();
     const records = json?.result?.records || [];
+
+    if (records.length === 0) {
+      console.warn("No se encontraron registros para Mar del Plata");
+      return null;
+    }
 
     return {
       ypf: buildEmpresa(records, "ypf", "YPF"),
@@ -109,7 +124,7 @@ export async function getCombustiblesMarDelPlata() {
       puma: buildEmpresa(records, "puma", "Puma"),
     };
   } catch (error) {
-    console.error("Error:", error);
+    console.error("Error capturado en getCombustibles:", error.message);
     return null;
   }
 }
