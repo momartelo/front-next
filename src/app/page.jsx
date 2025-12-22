@@ -5,7 +5,7 @@ import {
   getInflacionMensualActual,
   getInflacionInteranualActual,
 } from "./lib/inflacion";
-import { formatFechaHora } from "./lib/date";
+import { formatFechaHora, formatPeriodoCAC } from "./lib/date";
 import { getCACHistorico } from "./lib/cac";
 import CACChart from "./components/CACChart";
 import CACSelector from "./components/CACSelector";
@@ -221,9 +221,14 @@ export default async function Dashboard() {
           <Card title="Índice de la Construcción - CAC">
             {ultimoCAC ? (
               <>
-                <p className="text-3xl font-bold mb-1 text-center mt-1 text-blue-600">
+                <p className="text-center text-sm text-gray-500 m-0 p-0">
+                  General
+                </p>
+
+                <p className="text-3xl font-bold text-center  text-blue-600">
                   {formatNumber(ultimoCAC.general)}
                 </p>
+
                 <div className="space-y-1 text-sm mt-2">
                   <div className="flex justify-between">
                     <span className="text-gray-600">Materiales</span>
@@ -231,12 +236,15 @@ export default async function Dashboard() {
                       {formatNumber(ultimoCAC.materials)}
                     </span>
                   </div>
-                  <div className="flex justify-between">
+                  <div className="flex justify-between m-0">
                     <span className="text-gray-600">Mano de obra</span>
-                    <span className="font-medium">
+                    <span className="font-medium ">
                       {formatNumber(ultimoCAC.labour_force)}
                     </span>
                   </div>
+                  <p className="text-center text-xs text-gray-600">
+                    {formatPeriodoCAC(ultimoCAC.period)}
+                  </p>
                 </div>
               </>
             ) : (

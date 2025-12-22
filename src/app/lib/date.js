@@ -9,3 +9,16 @@ export function formatFechaHora(iso) {
     }),
   };
 }
+
+export const formatPeriodoCAC = (period) => {
+  if (!period) return "-";
+
+  const [year, month] = period.split("-"); // "2025", "10", "01"
+
+  const date = new Date(Number(year), Number(month) - 1);
+
+  return date.toLocaleDateString("es-AR", {
+    month: "long",
+    year: "numeric",
+  });
+};
