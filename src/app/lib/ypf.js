@@ -89,28 +89,26 @@ function buildEmpresa(records, empresaKey, nombre) {
 
 export async function getCombustiblesMarDelPlata() {
   try {
-    // 1. Creamos el agente que ignora el certificado vencido explícitamente
-    const agent = new https.Agent({
-      rejectUnauthorized: false,
-    });
+    // 1. Saltamos la validación SSL para esta petición (solución para certificados vencidos)
+    process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
     const url = `${DATASET_URL}&limit=1000`;
 
-    // 2. En Next.js (Node 18+), pasamos el agente dentro de la propiedad 'agent'
-    // IMPORTANTE: Algunos entornos de Vercel requieren que uses 'node-fetch'
-    // si el fetch nativo ignora el agente.
     const res = await fetch(url, {
+      method: "GET",
+      // 'no-store' asegura que Next.js no guarde los datos de esta API en disco
       cache: "no-store",
-      // @ts-ignore - Algunas versiones de TS se quejan, pero funciona en Node
-      agent: agent,
       headers: {
         "User-Agent": "Mozilla/5.0",
         Accept: "application/json",
       },
     });
 
+    // 2. Restauramos la seguridad SSL para el resto de la aplicación
+    process.env.NODE_TLS_REJECT_UNAUTHORIZED = "1";
+
     if (!res.ok) {
-      console.error("HTTP Error:", res.status);
+      console.error("HTTP Error en API Energía:", res.status);
       return null;
     }
 
@@ -124,7 +122,8 @@ export async function getCombustiblesMarDelPlata() {
       puma: buildEmpresa(records, "puma", "Puma"),
     };
   } catch (error) {
-    // Este log te va a decir si sigue siendo el certificado u otra cosa
+    // Si algo falla, restauramos la seguridad por las dudas
+    process.env.NODE_TLS_REJECT_UNAUTHORIZED = "1";
     console.error("Error en Combustibles:", error.message);
     return null;
   }

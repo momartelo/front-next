@@ -1,8 +1,11 @@
 const BASE_URL = "https://dolarapi.com/v1";
 
+const isDev = process.env.NODE_ENV === "development";
+
 export async function getDolares() {
   const res = await fetch(`${BASE_URL}/dolares`, {
-    next: { revalidate: 60 },
+    cache: isDev ? "no-store" : undefined,
+    next: { revalidate: isDev ? 0 : 60 },
   });
 
   if (!res.ok) {
@@ -14,7 +17,8 @@ export async function getDolares() {
 
 export async function getEuro() {
   const res = await fetch(`${BASE_URL}/cotizaciones/eur`, {
-    next: { revalidate: 60 },
+    cache: isDev ? "no-store" : undefined,
+    next: { revalidate: isDev ? 0 : 60 },
   });
 
   if (!res.ok) {
@@ -26,7 +30,8 @@ export async function getEuro() {
 
 export async function getReal() {
   const res = await fetch(`${BASE_URL}/cotizaciones/brl`, {
-    next: { revalidate: 60 },
+    cache: isDev ? "no-store" : undefined,
+    next: { revalidate: isDev ? 0 : 60 },
   });
 
   if (!res.ok) {

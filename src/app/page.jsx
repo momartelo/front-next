@@ -1,4 +1,5 @@
 export const runtime = "nodejs";
+export const revalidate = 60;
 import Card from "./components/Card";
 import { getDolares, getEuro, getReal } from "./lib/dolar";
 import {

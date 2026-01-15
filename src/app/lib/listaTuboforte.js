@@ -1,0 +1,16 @@
+export const PRECIOS_TUBOFORTE_AGUA_6 = [
+  { diametro: 50, precioUsd: 10.53 },
+  { diametro: 63, precioUsd: 14.04 },
+  { diametro: 75, precioUsd: 19.5 },
+  { diametro: 90, precioUsd: 28.28 },
+  { diametro: 110, precioUsd: 40.56 },
+  { diametro: 125, precioUsd: 54.6 },
+  { diametro: 140, precioUsd: 66.3 },
+  { diametro: 160, precioUsd: 85.8 },
+  { diametro: 200, precioUsd: 162.33 },
+  { diametro: 250, precioUsd: 206.7 },
+  { diametro: 315, precioUsd: 327.21 },
+  { diametro: 355, precioUsd: 417.3 },
+  { diametro: 400, precioUsd: 530.4 },
+  { diametro: 500, precioUsd: 822.9 },
+];
