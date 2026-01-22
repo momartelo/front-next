@@ -1,5 +1,6 @@
 export const runtime = "nodejs";
-export const revalidate = 60;
+// export const revalidate = 900;
+export const dynamic = "force-dynamic";
 import Card from "./components/Card";
 import { getDolares, getEuro, getReal } from "./lib/dolar";
 import {
@@ -12,6 +13,8 @@ import CACChart from "./components/CACChart";
 import CACSelector from "./components/CACSelector";
 import { getCombustiblesMarDelPlata } from "./lib/ypf";
 import ShareButton from "./components/ShareButton";
+import { getIndiceUVAActual } from "./lib/indiceUVA";
+import { getRiesgoPaisUltimo } from "./lib/riesgoPais";
 
 export default async function Dashboard() {
   // Manejo de errores con Promise.allSettled para que si una API falla, el resto cargue
@@ -23,6 +26,8 @@ export default async function Dashboard() {
     inflacionInteranual,
     cacHistorico,
     combustibles,
+    indiceUVA,
+    riesgoPais,
   ] = await Promise.all([
     getDolares(),
     getEuro(),
@@ -31,6 +36,8 @@ export default async function Dashboard() {
     getInflacionInteranualActual(),
     getCACHistorico(),
     getCombustiblesMarDelPlata(),
+    getIndiceUVAActual(),
+    getRiesgoPaisUltimo(),
   ]);
 
   const getFechaFormateada = (item) =>
@@ -210,6 +217,32 @@ export default async function Dashboard() {
                   {inflacionInteranual.valor.toFixed(2)}%
                 </p>
                 <small>{inflacionInteranual.fecha}</small>
+              </>
+            ) : (
+              <p>No disponible</p>
+            )}
+          </Card>
+
+          <Card title="Indice UVA" center>
+            {indiceUVA ? (
+              <>
+                <p className={`text-2xl font-semibold ${inflacionColor}`}>
+                  {indiceUVA.valor.toFixed(2)}
+                </p>
+                <small>{indiceUVA.fecha}</small>
+              </>
+            ) : (
+              <p>No disponible</p>
+            )}
+          </Card>
+
+          <Card title="Riesgo Pais" center>
+            {riesgoPais ? (
+              <>
+                <p className={`text-2xl font-semibold ${inflacionColor}`}>
+                  {riesgoPais.valor.toFixed(2)}
+                </p>
+                <small>{riesgoPais.fecha}</small>
               </>
             ) : (
               <p>No disponible</p>

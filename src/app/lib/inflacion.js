@@ -2,7 +2,8 @@ const BASE_URL = "https://api.argentinadatos.com/v1/finanzas/indices";
 
 async function fetchInflacion(endpoint) {
   const res = await fetch(`${BASE_URL}/${endpoint}`, {
-    next: { revalidate: 3600 },
+    // next: { revalidate: 3600 },
+    cache: "no-store",
   });
 
   if (!res.ok) {

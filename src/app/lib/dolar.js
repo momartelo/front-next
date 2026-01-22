@@ -5,7 +5,7 @@ const isDev = process.env.NODE_ENV === "development";
 export async function getDolares() {
   const res = await fetch(`${BASE_URL}/dolares`, {
     cache: isDev ? "no-store" : undefined,
-    next: { revalidate: isDev ? 0 : 60 },
+    // next: { revalidate: isDev ? 0 : 60 },
   });
 
   if (!res.ok) {

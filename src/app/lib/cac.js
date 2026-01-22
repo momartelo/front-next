@@ -1,6 +1,6 @@
 export async function getCACHistorico() {
   const res = await fetch("https://prestamos.ikiwi.net.ar/api/cacs", {
-    next: { revalidate: 86400 }, // 1 vez por día (más que suficiente)
+    next: { revalidate: 3600 }, // 1 vez por hora (más que suficiente)
   });
 
   if (!res.ok) {
