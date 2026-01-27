@@ -1,5 +1,6 @@
 import { Roboto } from "next/font/google";
 import "./globals.css";
+import Nav from "./components/Nav";
 
 const roboto = Roboto({
   subsets: ["latin"],
@@ -17,6 +18,7 @@ export default function RootLayout({ children }) {
   return (
     <html lang="es">
       <body className={`${roboto.variable} font-sans antialiased`}>
+        <Nav />
         {children}
       </body>
     </html>

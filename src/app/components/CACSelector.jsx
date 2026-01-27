@@ -12,21 +12,27 @@ export default function CACSelector({ cacHistorico, ultimoCAC }) {
   const [baseAmount, setBaseAmount] = useState("");
   const [displayAmount, setDisplayAmount] = useState("");
 
+  /* ===============================
+     INPUT MONTO (coma / punto OK)
+     =============================== */
   const handleInputChange = (e) => {
-    const rawValue = e.target.value;
+    let value = e.target.value;
 
-    // 1. Limpiamos el valor para procesarlo: quitamos puntos de miles y pasamos coma a punto decimal
-    let cleanValue = rawValue.replace(/\./g, "").replace(/,/g, ".");
+    // Nos quedamos solo con números, puntos y comas
+    value = value.replace(/[^0-9.,]/g, "");
 
-    // Validamos que sea un número (permitiendo el punto decimal)
+    const lastChar = value[value.length - 1];
+    const hasDecimalIntent = lastChar === "." || lastChar === ",";
+
+    // Normalizamos para cálculo
+    let cleanValue = value.replace(/\./g, "").replace(/,/g, ".");
+
     const parts = cleanValue.split(".");
-    if (parts.length > 2) return; // Evita múltiples puntos decimales
+    if (parts.length > 2) return;
 
-    // Actualizamos el valor numérico para los cálculos
     setBaseAmount(cleanValue);
 
-    // 2. Formateamos para la vista del usuario
-    if (cleanValue === "") {
+    if (!cleanValue) {
       setDisplayAmount("");
       return;
     }
@@ -34,15 +40,20 @@ export default function CACSelector({ cacHistorico, ultimoCAC }) {
     const [integerPart, decimalPart] = cleanValue.split(".");
     const formattedInteger = Number(integerPart).toLocaleString("es-AR");
 
-    // Si el usuario escribió una coma, la mantenemos en el string de visualización
-    const finalDisplay =
-      decimalPart !== undefined
-        ? `${formattedInteger},${decimalPart}`
-        : formattedInteger;
+    let display = formattedInteger;
 
-    setDisplayAmount(finalDisplay);
+    if (decimalPart !== undefined) {
+      display += `,${decimalPart}`;
+    } else if (hasDecimalIntent) {
+      display += ",";
+    }
+
+    setDisplayAmount(display);
   };
 
+  /* ===============================
+     PERIODOS DISPONIBLES
+     =============================== */
   const availablePeriods = useMemo(() => {
     return cacHistorico.map((item) => {
       const date = new Date(item.period);
@@ -54,7 +65,7 @@ export default function CACSelector({ cacHistorico, ultimoCAC }) {
   }, [cacHistorico]);
 
   const years = [...new Set(availablePeriods.map((p) => p.year))].sort(
-    (a, b) => b - a
+    (a, b) => b - a,
   );
 
   const months = availablePeriods
@@ -62,6 +73,9 @@ export default function CACSelector({ cacHistorico, ultimoCAC }) {
     .map((p) => p.month)
     .sort((a, b) => b - a);
 
+  /* ===============================
+     CAC SELECCIONADO
+     =============================== */
   const selectedCAC = useMemo(() => {
     if (selectedYear === null || selectedMonth === null) return null;
 
@@ -74,6 +88,9 @@ export default function CACSelector({ cacHistorico, ultimoCAC }) {
     });
   }, [selectedYear, selectedMonth, cacHistorico]);
 
+  /* ===============================
+     MONTO ACTUALIZADO
+     =============================== */
   const updatedAmount = useMemo(() => {
     if (!selectedCAC || !ultimoCAC || !baseAmount || baseAmount === ".")
       return null;
@@ -81,7 +98,6 @@ export default function CACSelector({ cacHistorico, ultimoCAC }) {
     const base = parseFloat(baseAmount);
     if (isNaN(base) || base <= 0) return null;
 
-    // Aquí usamos el 'indice' seleccionado por el usuario dinámicamente
     return (base / selectedCAC[indice]) * ultimoCAC[indice];
   }, [baseAmount, selectedCAC, ultimoCAC, indice]);
 
@@ -91,6 +107,22 @@ export default function CACSelector({ cacHistorico, ultimoCAC }) {
       maximumFractionDigits: 2,
     });
 
+  /* ===============================
+     DEFAULT: ÚLTIMO PERÍODO CAC
+     =============================== */
+  useEffect(() => {
+    if (!cacHistorico?.length) return;
+
+    const ultimo = cacHistorico.at(-1);
+    const date = new Date(ultimo.period);
+
+    setSelectedYear(date.getUTCFullYear());
+    setSelectedMonth(date.getUTCMonth());
+  }, [cacHistorico]);
+
+  /* ===============================
+     RESET ÍNDICE AL CAMBIAR PERÍODO
+     =============================== */
   useEffect(() => {
     if (selectedCAC) {
       setIndice("general");
@@ -107,36 +139,32 @@ export default function CACSelector({ cacHistorico, ultimoCAC }) {
         <div className="flex gap-4">
           <select
             className={inputClassName}
-            value={selectedYear ?? ""}
-            onChange={(e) => {
-              setSelectedYear(Number(e.target.value));
-              setSelectedMonth(null);
-            }}
+            value={selectedMonth ?? ""}
+            onChange={(e) => setSelectedMonth(Number(e.target.value))}
+            disabled={!selectedYear}
           >
-            <option value="" className="text-gray-900">
-              Año
-            </option>
-            {years.map((year) => (
-              <option key={year} value={year} className="text-gray-900">
-                {year}
+            <option value="">Mes</option>
+            {months.map((month) => (
+              <option key={month} value={month}>
+                {new Date(2000, month).toLocaleString("es-AR", {
+                  month: "long",
+                })}
               </option>
             ))}
           </select>
 
           <select
             className={inputClassName}
-            value={selectedMonth ?? ""}
-            onChange={(e) => setSelectedMonth(Number(e.target.value))}
-            disabled={!selectedYear}
+            value={selectedYear ?? ""}
+            onChange={(e) => {
+              setSelectedYear(Number(e.target.value));
+              setSelectedMonth(null);
+            }}
           >
-            <option value="" className="text-gray-900">
-              Mes
-            </option>
-            {months.map((month) => (
-              <option key={month} value={month} className="text-gray-900">
-                {new Date(2000, month).toLocaleString("es-AR", {
-                  month: "long",
-                })}
+            <option value="">Año</option>
+            {years.map((year) => (
+              <option key={year} value={year}>
+                {year}
               </option>
             ))}
           </select>
@@ -145,28 +173,11 @@ export default function CACSelector({ cacHistorico, ultimoCAC }) {
         {selectedCAC ? (
           <div className="pt-2 border-t border-gray-200 space-y-2">
             {/* ÍNDICE PRINCIPAL */}
-            <p className="flex justify-center gap-6 text-sm text-gray-500">
-              {indice == "general" && (
-                <span className="flex justify-center text-gray-500">
-                  General
-                </span>
-              )}
-              {indice == "materials" && (
-                <span className="flex justify-center text-gray-500">
-                  Materiales
-                </span>
-              )}
-              {indice == "labour_force" && (
-                <span className="flex justify-center text-gray-500">
-                  Mano de Obra
-                </span>
-              )}
-            </p>
             <p className="text-3xl font-bold text-blue-600 text-center">
               {formatNumber(selectedCAC[indice])}
             </p>
 
-            {/* OTROS ÍNDICES (Mini badges) */}
+            {/* OTROS ÍNDICES */}
             <div className="flex justify-center gap-6 text-sm text-gray-500">
               {indice !== "general" && (
                 <span>General: {formatNumber(selectedCAC.general)}</span>
@@ -176,12 +187,12 @@ export default function CACSelector({ cacHistorico, ultimoCAC }) {
               )}
               {indice !== "labour_force" && (
                 <span>
-                  Mano de Obra: {formatNumber(selectedCAC.labour_force)}
+                  Mano de obra: {formatNumber(selectedCAC.labour_force)}
                 </span>
               )}
             </div>
 
-            {/* SELECTOR DE ÍNDICE (Manteniendo tu funcionalidad original) */}
+            {/* SELECTOR DE ÍNDICE */}
             <div>
               <label className="block text-sm font-medium mb-1 text-gray-700">
                 Tipo de índice
@@ -197,7 +208,7 @@ export default function CACSelector({ cacHistorico, ultimoCAC }) {
               </select>
             </div>
 
-            {/* MONTO BASE (Con formateo de miles y decimales) */}
+            {/* MONTO BASE */}
             <div>
               <label className="block text-sm font-medium mb-1 text-gray-700">
                 Monto a actualizar
@@ -206,7 +217,6 @@ export default function CACSelector({ cacHistorico, ultimoCAC }) {
                 <span className="absolute inset-y-0 left-3 flex items-center text-gray-700 pointer-events-none">
                   $
                 </span>
-
                 <input
                   type="text"
                   inputMode="decimal"
