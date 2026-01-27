@@ -1,4 +1,5 @@
 export default {
+  darkMode: "media",
   content: ["./app/**/*.{js,jsx}", "./components/**/*.{js,jsx}"],
   theme: {
     extend: {
