@@ -138,50 +138,63 @@ export default function InflationDashboard() {
 
       <ThemeProvider theme={muiTheme}>
         <LocalizationProvider dateAdapter={AdapterDateFns} locale={esLocale}>
-          {/* Inputs */}
-          <Stack direction="row" spacing={2} justifyContent="center" mb={2}>
-            <DatePicker
-              views={["year", "month"]}
-              label="Desde"
-              value={fechaInicio}
-              onChange={setFechaInicio}
-              slotProps={{
-                textField: {
-                  size: "small",
-                  sx: { width: 200 },
-                },
-              }}
-            />
+          <Stack
+            direction="row"
+            spacing={3}
+            justifyContent="center"
+            alignItems="center"
+            mb={2}
+            flexWrap="wrap"
+          >
+            {/* Inputs */}
+            <Stack direction="row" spacing={2} justifyContent="center" mb={2}>
+              <DatePicker
+                views={["year", "month"]}
+                label="Desde"
+                value={fechaInicio}
+                onChange={setFechaInicio}
+                slotProps={{
+                  textField: {
+                    size: "small",
+                    sx: { width: 200 },
+                  },
+                }}
+              />
 
-            <DatePicker
-              views={["year", "month"]}
-              label="Hasta"
-              value={fechaFin}
-              onChange={setFechaFin}
-              slotProps={{
-                textField: {
-                  size: "small",
-                  sx: { width: 200 },
-                },
-              }}
-            />
-          </Stack>
+              <DatePicker
+                views={["year", "month"]}
+                label="Hasta"
+                value={fechaFin}
+                onChange={setFechaFin}
+                slotProps={{
+                  textField: {
+                    size: "small",
+                    sx: { width: 200 },
+                  },
+                }}
+              />
+            </Stack>
 
-          {/* Botones */}
-          <Stack direction="row" spacing={2} justifyContent="center" mb={2}>
-            <Button variant="outlined" color="primary" onClick={handleFiltrar}>
-              Filtrar
-            </Button>
-            <Button variant="outlined" color="error" onClick={handleReset}>
-              Reset
-            </Button>
-            <Button
-              variant="outlined"
-              color="success"
-              onClick={handleUltimos12Meses}
-            >
-              Últimos 12 meses
-            </Button>
+            {/* Botones */}
+            <Stack direction="row" spacing={2} justifyContent="center" mb={2}>
+              <Button
+                variant="outlined"
+                color="primary"
+                onClick={handleFiltrar}
+              >
+                Filtrar
+              </Button>
+              <Button variant="outlined" color="error" onClick={handleReset}>
+                Reset
+              </Button>
+              <Button
+                variant="outlined"
+                color="success"
+                onClick={handleUltimos12Meses}
+              >
+                Últimos 12 meses
+              </Button>
+            </Stack>
           </Stack>
         </LocalizationProvider>
       </ThemeProvider>
@@ -199,7 +212,7 @@ export default function InflationDashboard() {
             rounded shadow
           "
         >
-          <div className="h-[320px] md:h-[420px] xl:h-[520px]">
+          <div className="h-[45vh] md:h-[50vh] xl:h-[60vh]">
             <Line
               data={chartData}
               options={{
