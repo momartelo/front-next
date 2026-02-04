@@ -182,7 +182,13 @@ export default function InflationDashboard() {
               flexWrap="wrap"
             >
               {/* DatePickers */}
-              <Stack direction="row" spacing={2} justifyContent="center" mb={2}>
+              <Stack
+                direction="row"
+                spacing={2}
+                justifyContent="center"
+                mb={2}
+                className="mt-2 sm:mt-0"
+              >
                 <DatePicker
                   views={["year", "month"]}
                   label="Desde"
