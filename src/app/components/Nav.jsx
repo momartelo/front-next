@@ -9,8 +9,9 @@ export default function Nav() {
       "
     >
       <nav className="max-w-7xl mx-auto flex items-center justify-between p-4">
-        <h2 className="font-semibold text-lg text-gray-900 dark:text-gray-100">
-          📊 Dashboard Económico
+        <h2 className="font-semibold text-lg text-gray-900 dark:text-gray-100 flex items-center gap-1">
+          <span>📊</span>
+          <span className="hidden sm:inline">Dashboard Económico</span>
         </h2>
 
         <div className="flex gap-4 text-sm">
