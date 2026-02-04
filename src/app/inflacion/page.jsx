@@ -99,12 +99,22 @@ export default function InflationDashboard() {
     setFechaFin(null);
   };
 
-  const handleUltimos12Meses = () => {
-    const hoy = new Date();
-    const hace12Meses = new Date(hoy.getFullYear(), hoy.getMonth() - 11, 1);
+  const formatMesAnio = (fecha) => {
+    const d = new Date(fecha);
+    const mes = d
+      .toLocaleDateString("es-AR", { month: "short" })
+      .replace(".", "");
+    const anio = d.getFullYear().toString().slice(-2);
+    return `${mes}-${anio}`;
+  };
 
-    setFechaInicio(hace12Meses);
-    setFechaFin(hoy);
+  const handleUltimos12Meses = () => {
+    if (inflacionHistorica.length === 0) return;
+
+    const ultimos12 = inflacionHistorica.slice(-12);
+
+    setFechaInicio(new Date(ultimos12[0].fecha));
+    setFechaFin(new Date(ultimos12[ultimos12.length - 1].fecha));
   };
 
   const chartData = {
@@ -210,7 +220,7 @@ export default function InflationDashboard() {
                   color="success"
                   onClick={handleUltimos12Meses}
                 >
-                  Últimos 12 meses
+                  Últimos 12 indices
                 </Button>
               </Stack>
             </Stack>
@@ -220,15 +230,39 @@ export default function InflationDashboard() {
 
       {/* Gráfico */}
       {filtrada.length > 0 ? (
-        <div className="w-full max-w-full lg:max-w-5xl xl:max-w-6xl bg-white dark:bg-gray-800 p-2 md:p-4 rounded shadow mt-4 2xl:mt-8">
-          <div className="h-[45vh] md:h-[50vh] xl:h-[65vh]">
-            <Line
-              data={chartData}
-              options={{
-                ...chartOptions,
-                maintainAspectRatio: false,
-              }}
-            />
+        <div className="w-full max-w-none 2xl:px-8 bg-white dark:bg-gray-800 p-2 md:p-4 rounded shadow">
+          <div className="grid grid-cols-1 xl:grid-cols-[1fr_220px] gap-4">
+            <div className="h-[45vh] md:h-[50vh] xl:h-[65vh]">
+              <Line
+                data={chartData}
+                options={{
+                  ...chartOptions,
+                  maintainAspectRatio: false,
+                }}
+              />
+            </div>
+            <div className="border rounded-lg p-3 bg-gray-50 dark:bg-gray-900 overflow-hidden">
+              <h3 className="text-center text-sm font-semibold mb-2 text-gray-700 dark:text-gray-300 sticky top-0 bg-gray-50 dark:bg-gray-900 z-10 py-1">
+                Valores del período
+              </h3>
+
+              <div className="max-h-[55vh] overflow-y-auto space-y-1 pr-1">
+                {filtrada.map((item, idx) => (
+                  <div
+                    key={idx}
+                    className={`flex justify-between items-center px-2 py-1 rounded transition hover:bg-gray-200 dark:hover:bg-gray-700`}
+                  >
+                    <span className="text-xs text-gray-600 dark:text-gray-400">
+                      {formatMesAnio(item.fecha)}
+                    </span>
+
+                    <span className="text-sm font-mono font-semibold text-gray-900 dark:text-gray-100">
+                      {item.valor.toFixed(2)}%
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       ) : (
