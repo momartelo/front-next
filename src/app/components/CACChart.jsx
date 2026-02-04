@@ -53,7 +53,7 @@ export default function CACChart({ data }) {
 
   return (
     <div className="w-full">
-      <ResponsiveContainer width="100%" aspect={2.5}>
+      <ResponsiveContainer width="90%" aspect={2.5}>
         <LineChart data={formattedData}>
           <XAxis
             dataKey="label"

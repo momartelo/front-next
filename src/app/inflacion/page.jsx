@@ -1,8 +1,10 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useState, useEffect, useMemo } from "react";
 import { Line } from "react-chartjs-2";
 import { getInflacionMensualHistorica } from "../lib/inflacion";
+
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -24,9 +26,15 @@ ChartJS.register(
 
 import { Button, Stack } from "@mui/material";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
-import { LocalizationProvider, DatePicker } from "@mui/x-date-pickers";
+import { LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import esLocale from "date-fns/locale/es";
+
+// 👉 DatePicker solo en cliente
+const DatePicker = dynamic(
+  () => import("@mui/x-date-pickers/DatePicker").then((mod) => mod.DatePicker),
+  { ssr: false },
+);
 
 export default function InflationDashboard() {
   const [inflacionHistorica, setInflacionHistorica] = useState([]);
@@ -34,9 +42,18 @@ export default function InflationDashboard() {
   const [fechaFin, setFechaFin] = useState(null);
   const [filtrada, setFiltrada] = useState([]);
 
-  const isDark =
-    typeof window !== "undefined" &&
-    window.matchMedia("(prefers-color-scheme: dark)").matches;
+  // 🌙 Dark / Light sin hydration mismatch
+  const [isDark, setIsDark] = useState(false);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(prefers-color-scheme: dark)");
+    setIsDark(mq.matches);
+
+    const handler = (e) => setIsDark(e.matches);
+    mq.addEventListener("change", handler);
+
+    return () => mq.removeEventListener("change", handler);
+  }, []);
 
   const muiTheme = useMemo(
     () =>
@@ -48,6 +65,7 @@ export default function InflationDashboard() {
     [isDark],
   );
 
+  // Carga datos
   useEffect(() => {
     getInflacionMensualHistorica().then((data) => {
       const sorted = data.sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
@@ -56,29 +74,35 @@ export default function InflationDashboard() {
     });
   }, []);
 
-  const handleFiltrar = () => {
+  // 🔥 FILTRADO AUTOMÁTICO
+  useEffect(() => {
+    if (!inflacionHistorica.length) return;
+
+    // si no hay fechas, mostrar todo
+    if (!fechaInicio && !fechaFin) {
+      setFiltrada(inflacionHistorica);
+      return;
+    }
+
     const filtered = inflacionHistorica.filter((item) => {
       const fecha = new Date(item.fecha);
       if (fechaInicio && fecha < fechaInicio) return false;
       if (fechaFin && fecha > fechaFin) return false;
       return true;
     });
+
     setFiltrada(filtered);
-  };
+  }, [fechaInicio, fechaFin, inflacionHistorica]);
 
   const handleReset = () => {
     setFechaInicio(null);
     setFechaFin(null);
-    setFiltrada(inflacionHistorica);
   };
 
   const handleUltimos12Meses = () => {
     const hoy = new Date();
     const hace12Meses = new Date(hoy.getFullYear(), hoy.getMonth() - 11, 1);
-    const filtered = inflacionHistorica.filter(
-      (item) => new Date(item.fecha) >= hace12Meses,
-    );
-    setFiltrada(filtered);
+
     setFechaInicio(hace12Meses);
     setFechaFin(hoy);
   };
@@ -136,83 +160,68 @@ export default function InflationDashboard() {
         Inflación mensual histórica
       </h1>
 
-      <ThemeProvider theme={muiTheme}>
-        <LocalizationProvider dateAdapter={AdapterDateFns} locale={esLocale}>
-          <Stack
-            direction="row"
-            spacing={3}
-            justifyContent="center"
-            alignItems="center"
-            mb={2}
-            flexWrap="wrap"
-          >
-            {/* Inputs */}
-            <Stack direction="row" spacing={2} justifyContent="center" mb={2}>
-              <DatePicker
-                views={["year", "month"]}
-                label="Desde"
-                value={fechaInicio}
-                onChange={setFechaInicio}
-                slotProps={{
-                  textField: {
-                    size: "small",
-                    sx: { width: 200 },
-                  },
-                }}
-              />
+      <div className="mt-2 xl:mt-4 2xl:mt-4">
+        <ThemeProvider theme={muiTheme}>
+          <LocalizationProvider dateAdapter={AdapterDateFns} locale={esLocale}>
+            <Stack
+              direction="row"
+              spacing={3}
+              justifyContent="center"
+              alignItems="center"
+              mb={2}
+              flexWrap="wrap"
+            >
+              {/* DatePickers */}
+              <Stack direction="row" spacing={2} justifyContent="center" mb={2}>
+                <DatePicker
+                  views={["year", "month"]}
+                  label="Desde"
+                  value={fechaInicio}
+                  onChange={setFechaInicio}
+                  slotProps={{
+                    textField: {
+                      size: "small",
+                      sx: { width: 200 },
+                    },
+                  }}
+                />
 
-              <DatePicker
-                views={["year", "month"]}
-                label="Hasta"
-                value={fechaFin}
-                onChange={setFechaFin}
-                slotProps={{
-                  textField: {
-                    size: "small",
-                    sx: { width: 200 },
-                  },
-                }}
-              />
+                <DatePicker
+                  views={["year", "month"]}
+                  label="Hasta"
+                  value={fechaFin}
+                  onChange={setFechaFin}
+                  slotProps={{
+                    textField: {
+                      size: "small",
+                      sx: { width: 200 },
+                    },
+                  }}
+                />
+              </Stack>
+
+              {/* Botones */}
+              <Stack direction="row" spacing={2} justifyContent="center" mb={2}>
+                <Button variant="outlined" color="error" onClick={handleReset}>
+                  Reset
+                </Button>
+                <Button
+                  variant="outlined"
+                  color="success"
+                  onClick={handleUltimos12Meses}
+                >
+                  Últimos 12 meses
+                </Button>
+              </Stack>
             </Stack>
+          </LocalizationProvider>
+        </ThemeProvider>
+      </div>
 
-            {/* Botones */}
-            <Stack direction="row" spacing={2} justifyContent="center" mb={2}>
-              <Button
-                variant="outlined"
-                color="primary"
-                onClick={handleFiltrar}
-              >
-                Filtrar
-              </Button>
-              <Button variant="outlined" color="error" onClick={handleReset}>
-                Reset
-              </Button>
-              <Button
-                variant="outlined"
-                color="success"
-                onClick={handleUltimos12Meses}
-              >
-                Últimos 12 meses
-              </Button>
-            </Stack>
-          </Stack>
-        </LocalizationProvider>
-      </ThemeProvider>
-
-      {/* Gráfico responsive */}
+      {/* Gráfico */}
       {filtrada.length > 0 ? (
-        <div
-          className="
-            w-full
-            max-w-full
-            lg:max-w-5xl
-            xl:max-w-6xl
-            bg-white dark:bg-gray-800
-            p-2 md:p-4
-            rounded shadow
-          "
-        >
-          <div className="h-[45vh] md:h-[50vh] xl:h-[60vh]">
+        <div className="w-full max-w-full lg:max-w-5xl xl:max-w-6xl bg-white dark:bg-gray-800 p-2 md:p-4 rounded shadow mt-4 2xl:mt-8">
+          <div className="h-[45vh] md:h-[50vh] xl:h-[65vh]">
             <Line
               data={chartData}
               options={{
