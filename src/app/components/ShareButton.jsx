@@ -22,6 +22,8 @@ export default function ShareButton() {
         getCACHistorico(),
       ]);
 
+      console.log("COMBUSTIBLES:", combustibles);
+
       const ultimoCAC = cac?.at(-1);
 
       setDatos({

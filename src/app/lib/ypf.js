@@ -1,4 +1,4 @@
-import https from "https";
+// import https from "https";
 
 // Volvemos a filtrar por Mar del Plata en la URL para que la API nos de solo lo que necesitamos
 const DATASET_URL =
@@ -27,14 +27,14 @@ const PRODUCTOS = {
 
 function getLatestPrice(rows, productNames) {
   const filtered = rows.filter((r) =>
-    productNames.includes(normalize(r.producto))
+    productNames.includes(normalize(r.producto)),
   );
   if (!filtered.length) return null;
 
   const sorted = filtered.sort(
     (a, b) =>
       new Date(b.fecha_vigencia).getTime() -
-      new Date(a.fecha_vigencia).getTime()
+      new Date(a.fecha_vigencia).getTime(),
   );
 
   const latestDate = sorted[0].fecha_vigencia;
@@ -89,9 +89,9 @@ function buildEmpresa(records, empresaKey, nombre) {
 
 export async function getCombustiblesMarDelPlata() {
   try {
-    const agent = new https.Agent({
-      rejectUnauthorized: false,
-    });
+    // const agent = new https.Agent({
+    //   rejectUnauthorized: false,
+    // });
 
     const url = `${DATASET_URL}&limit=1000`;
 
@@ -99,7 +99,7 @@ export async function getCombustiblesMarDelPlata() {
       method: "GET",
       cache: "no-store",
       // @ts-ignore (esto funciona en Node.js runtime)
-      agent: agent,
+      //   agent: agent,
       headers: {
         "User-Agent": "Mozilla/5.0",
         Accept: "application/json",
@@ -107,7 +107,7 @@ export async function getCombustiblesMarDelPlata() {
     });
 
     // 2. Restauramos la seguridad SSL para el resto de la aplicación
-    process.env.NODE_TLS_REJECT_UNAUTHORIZED = "1";
+    // process.env.NODE_TLS_REJECT_UNAUTHORIZED = "1";
 
     if (!res.ok) {
       console.error("HTTP Error en API Energía:", res.status);
