@@ -1,17 +1,13 @@
 import { Suspense } from "react";
 import CardSkeleton from "./components/CardSkeleton";
-
 import DolaresSection from "./sections/DolaresSection";
 import MonedasSection from "./sections/MonedasSection";
 import InflacionSection from "./sections/InflacionSection";
 import IndicesSection from "./sections/IndicesSection";
 import CombustiblesSection from "./sections/CombustiblesSection";
 import CACSection from "./sections/CACSection";
-
 import ShareButton from "./components/ShareButton";
-
 import CACSelectorSection from "./sections/CACSelectorSection";
-
 import CACSChartSection from "./sections/CACChartSection";
 
 export default function Dashboard() {

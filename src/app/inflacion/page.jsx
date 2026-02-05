@@ -4,6 +4,7 @@ import dynamic from "next/dynamic";
 import { useState, useEffect, useMemo } from "react";
 import { Line } from "react-chartjs-2";
 import { getInflacionMensualHistorica } from "../lib/inflacion";
+import { useTheme } from "next-themes";
 
 import {
   Chart as ChartJS,
@@ -41,19 +42,9 @@ export default function InflationDashboard() {
   const [fechaInicio, setFechaInicio] = useState(null);
   const [fechaFin, setFechaFin] = useState(null);
   const [filtrada, setFiltrada] = useState([]);
-
-  // 🌙 Dark / Light sin hydration mismatch
-  const [isDark, setIsDark] = useState(false);
-
-  useEffect(() => {
-    const mq = window.matchMedia("(prefers-color-scheme: dark)");
-    setIsDark(mq.matches);
-
-    const handler = (e) => setIsDark(e.matches);
-    mq.addEventListener("change", handler);
-
-    return () => mq.removeEventListener("change", handler);
-  }, []);
+  const [mounted, setMounted] = useState(false);
+  const { resolvedTheme } = useTheme();
+  const isDark = resolvedTheme === "dark";
 
   const muiTheme = useMemo(
     () =>
@@ -64,6 +55,9 @@ export default function InflationDashboard() {
       }),
     [isDark],
   );
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Carga datos
   useEffect(() => {
@@ -93,6 +87,8 @@ export default function InflationDashboard() {
 
     setFiltrada(filtered);
   }, [fechaInicio, fechaFin, inflacionHistorica]);
+
+  if (!mounted) return null;
 
   const handleReset = () => {
     setFechaInicio(null);
@@ -165,8 +161,8 @@ export default function InflationDashboard() {
   };
 
   return (
-    <div className="p-4 flex flex-col items-center bg-gray-50 dark:bg-gray-900 min-h-screen">
-      <h1 className="text-2xl font-bold mb-4 text-center text-gray-900 dark:text-gray-100">
+    <div className="p-4 flex flex-col items-center min-h-screen">
+      <h1 className="text-2xl font-bold mb-4 text-center">
         Inflación mensual histórica
       </h1>
 
@@ -237,7 +233,7 @@ export default function InflationDashboard() {
 
       {/* Gráfico */}
       {filtrada.length > 0 ? (
-        <div className=" w-full  2xl:w-[calc(100%-6rem)]  2xl:mx-12  2xl:mt-6 bg-white  dark:bg-gray-800  p-2 md:p-4  rounded shadow">
+        <div className=" w-full  2xl:w-[calc(100%-6rem)]  2xl:mx-12  2xl:mt-6 p-2 md:p-4  rounded shadow">
           <div className="grid grid-cols-1 xl:grid-cols-[1fr_220px] gap-4">
             <div className="h-[45vh] md:h-[50vh] xl:h-[65vh]">
               <Line
@@ -248,8 +244,8 @@ export default function InflationDashboard() {
                 }}
               />
             </div>
-            <div className="border rounded-lg p-3 bg-gray-50 dark:bg-gray-900 overflow-hidden w-1/2 sm:w-auto mx-auto sm:mx-0">
-              <h3 className="text-center text-sm font-semibold mb-2 text-gray-700 dark:text-gray-300 sticky top-0 bg-gray-50 dark:bg-gray-900 z-10 py-1">
+            <div className="border rounded-lg p-3 overflow-hidden w-1/2 sm:w-auto mx-auto sm:mx-0">
+              <h3 className="text-center text-sm font-semibold mb-2  sticky top-0  z-10 py-1">
                 Valores del período
               </h3>
 
@@ -257,13 +253,13 @@ export default function InflationDashboard() {
                 {filtrada.map((item, idx) => (
                   <div
                     key={idx}
-                    className={`flex justify-between items-center px-2 py-1 rounded transition hover:bg-gray-200 dark:hover:bg-gray-700`}
+                    className={`flex justify-between items-center px-2 py-1 rounded transition `}
                   >
-                    <span className="text-xs text-gray-600 dark:text-gray-400">
+                    <span className="text-xs  ">
                       {formatMesAnio(item.fecha)}
                     </span>
 
-                    <span className="text-sm font-mono font-semibold text-gray-900 dark:text-gray-100">
+                    <span className="text-sm font-mono font-semibold  ">
                       {item.valor.toFixed(2)}%
                     </span>
                   </div>
@@ -273,9 +269,7 @@ export default function InflationDashboard() {
           </div>
         </div>
       ) : (
-        <p className="text-gray-600 dark:text-gray-300">
-          No hay datos para el rango seleccionado.
-        </p>
+        <p>No hay datos para el rango seleccionado.</p>
       )}
     </div>
   );

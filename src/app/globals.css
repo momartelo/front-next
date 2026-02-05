@@ -3,16 +3,22 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  color-scheme: light; /* Indica al navegador que el esquema es claro */
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+.dark {
+  --background: #0a0a0a;
+  --foreground: #ededed;
+  color-scheme: dark; /* 🔥 ESTO arregla el fondo de los select */
 }
 
 body {
+  background-color: var(--background);
+  color: var(--foreground);
+}
+
+/* Forzar estilos en las opciones para navegadores que lo permiten */
+select option {
   background-color: var(--background);
   color: var(--foreground);
 }

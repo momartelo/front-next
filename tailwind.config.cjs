@@ -1,6 +1,6 @@
 export default {
-  darkMode: "media",
-  content: ["./app/**/*.{js,jsx}", "./components/**/*.{js,jsx}"],
+  darkMode: "class",
+  content: ["./src/app/**/*.{js,jsx}", "./src/components/**/*.{js,jsx}"],
   theme: {
     extend: {
       fontFamily: {

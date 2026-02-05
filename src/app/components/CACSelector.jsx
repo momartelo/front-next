@@ -130,7 +130,7 @@ export default function CACSelector({ cacHistorico, ultimoCAC }) {
   }, [selectedCAC]);
 
   const inputClassName =
-    "w-full border border-gray-300 rounded p-2 bg-white text-gray-900 focus:ring-2 focus:ring-blue-500 outline-none";
+    "w-full border border-gray-300 rounded p-2 focus:ring-2 focus:ring-blue-500 outline-none";
 
   return (
     <Card title="Índice CAC por período">
@@ -145,7 +145,7 @@ export default function CACSelector({ cacHistorico, ultimoCAC }) {
           >
             <option value="">Mes</option>
             {months.map((month) => (
-              <option key={month} value={month}>
+              <option key={month} value={month} className="dark:bg-black">
                 {new Date(2000, month).toLocaleString("es-AR", {
                   month: "long",
                 })}
@@ -178,7 +178,7 @@ export default function CACSelector({ cacHistorico, ultimoCAC }) {
             </p>
 
             {/* OTROS ÍNDICES */}
-            <div className="flex justify-center gap-6 text-sm text-gray-500">
+            <div className="flex justify-center gap-6 text-sm">
               {indice !== "general" && (
                 <span>General: {formatNumber(selectedCAC.general)}</span>
               )}
@@ -194,7 +194,7 @@ export default function CACSelector({ cacHistorico, ultimoCAC }) {
 
             {/* SELECTOR DE ÍNDICE */}
             <div>
-              <label className="block text-sm font-medium mb-1 text-gray-700">
+              <label className="block text-sm font-medium mb-1">
                 Tipo de índice
               </label>
               <select
@@ -210,11 +210,11 @@ export default function CACSelector({ cacHistorico, ultimoCAC }) {
 
             {/* MONTO BASE */}
             <div>
-              <label className="block text-sm font-medium mb-1 text-gray-700">
+              <label className="block text-sm font-medium mb-1 ">
                 Monto a actualizar
               </label>
               <div className="relative">
-                <span className="absolute inset-y-0 left-3 flex items-center text-gray-700 pointer-events-none">
+                <span className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
                   $
                 </span>
                 <input
@@ -241,7 +241,7 @@ export default function CACSelector({ cacHistorico, ultimoCAC }) {
             )}
           </div>
         ) : (
-          <p className="text-gray-400 text-sm pt-2 text-center italic">
+          <p className=" text-sm pt-2 text-center italic">
             Seleccioná un año y luego un mes
           </p>
         )}

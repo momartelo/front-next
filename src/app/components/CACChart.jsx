@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import {
   LineChart,
   Line,
@@ -10,36 +10,55 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
+import { useTheme } from "next-themes";
 
 export default function CACChart({ data }) {
+  const { resolvedTheme } = useTheme();
+  const isDark = resolvedTheme === "dark";
+
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  if (!mounted || !data?.length) return null;
-  // Formateamos fecha para eje X
-  const formattedData = data.map((item) => ({
-    ...item,
-    label: new Date(item.period).toLocaleString("es-AR", {
-      month: "short",
-      year: "2-digit",
-      timeZone: "UTC",
-    }),
-  }));
+  // 🔹 useMemo SIEMPRE se ejecuta
+  const formattedData = useMemo(() => {
+    if (!data?.length) return [];
 
-  function CustomTooltip({ active, payload, label }) {
+    return data.map((item) => ({
+      ...item,
+      label: new Date(item.period).toLocaleString("es-AR", {
+        month: "short",
+        year: "2-digit",
+        timeZone: "UTC",
+      }),
+    }));
+  }, [data]);
+
+  // 🔹 ahora sí, salida condicional
+  if (!mounted || !formattedData.length) return null;
+
+  const axisColor = isDark ? "#D1D5DB" : "#6B7280";
+
+  const CustomTooltip = ({ active, payload, label }) => {
     if (!active || !payload?.length) return null;
 
     return (
-      <div className="bg-white border border-gray-200 rounded-md shadow-md px-3 py-2 text-sm">
-        <p className="font-semibold text-gray-900 mb-1">Período: {label}</p>
+      <div
+        className={`rounded-md px-3 py-2 text-sm shadow-lg border
+          ${
+            isDark
+              ? "bg-gray-800 border-gray-700 text-gray-100"
+              : "bg-white border-gray-200 text-gray-900"
+          }`}
+      >
+        <p className="font-semibold mb-1">Período: {label}</p>
 
         {payload.map((item) => (
           <div key={item.dataKey} className="flex justify-between gap-4">
             <span style={{ color: item.stroke }}>{item.name}</span>
-            <span className="font-medium text-gray-900">
+            <span className="font-medium">
               {Number(item.value).toLocaleString("es-AR", {
                 minimumFractionDigits: 2,
                 maximumFractionDigits: 2,
@@ -49,33 +68,38 @@ export default function CACChart({ data }) {
         ))}
       </div>
     );
-  }
+  };
 
   return (
-    <div className="w-full ">
-      <ResponsiveContainer width="90%" aspect={2.5}>
+    <div className="w-full rounded-lg p-3">
+      <ResponsiveContainer width="100%" aspect={2.5}>
         <LineChart data={formattedData}>
           <XAxis
             dataKey="label"
-            // Aquí definimos el estilo del texto
-            tick={{ fontSize: 12, fill: "#6b7280" }}
+            tick={{ fill: axisColor, fontSize: 12 }}
+            axisLine={{ stroke: axisColor }}
             tickLine={false}
-            axisLine={true}
           />
+
           <YAxis
-            // Aplicamos el mismo estilo o uno diferente
-            tick={{ fontSize: 12, fill: "#6b7280" }}
-            tickFormatter={(v) => v.toLocaleString("es-AR")}
-            width={80} // Aumenta el ancho si el texto es muy grande para que no se corte
+            tick={{ fill: axisColor, fontSize: 12 }}
+            axisLine={{ stroke: axisColor }}
+            width={80}
           />
+
           <Tooltip content={<CustomTooltip />} />
-          <Legend iconSize={12} wrapperStyle={{ fontSize: 12 }} />
+
+          <Legend
+            iconSize={12}
+            wrapperStyle={{ fontSize: 12, color: axisColor }}
+          />
+
           <Line
             type="monotone"
             dataKey="general"
             name="General"
-            stroke="#1d4ed8" // azul fuerte
-            strokeWidth={1}
+            stroke="#1d4ed8"
+            strokeWidth={1.5}
             dot={{ r: 1 }}
           />
 
@@ -83,8 +107,8 @@ export default function CACChart({ data }) {
             type="monotone"
             dataKey="materials"
             name="Materiales"
-            stroke="#16a34a" // verde
-            strokeWidth={1}
+            stroke="#16a34a"
+            strokeWidth={1.5}
             dot={{ r: 1 }}
           />
 
@@ -92,8 +116,8 @@ export default function CACChart({ data }) {
             type="monotone"
             dataKey="labour_force"
             name="Mano de obra"
-            stroke="#dc2626" // rojo
-            strokeWidth={1}
+            stroke="#dc2626"
+            strokeWidth={1.5}
             dot={{ r: 1 }}
           />
         </LineChart>

@@ -1,29 +1,70 @@
 "use client";
 
-export default function ShareButton({ datos }) {
-  const handleShare = () => {
-    const texto =
-      `📊 *REPORTE ECONÓMICO* %0A%0A` +
-      `💵 *Dólar Blue:* $${datos.blue} %0A` +
-      `⛽ *Nafta YPF:* $${datos.ypf} %0A` +
-      `🏗️ *Índice CAC:* ${datos.cac} %0A%0A` +
-      `_Enviado desde mi Dashboard_`;
+import { useEffect, useState } from "react";
+import { getDolares } from "@/app/lib/dolar";
+import { getCombustiblesMarDelPlata } from "@/app/lib/ypf";
+import { getCACHistorico } from "@/app/lib/cac";
 
-    window.open(`https://wa.me/?text=${texto}`, "_blank");
+export default function ShareButton() {
+  const [datos, setDatos] = useState(null);
+
+  const formatNumber = (value) =>
+    Number(value).toLocaleString("es-AR", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+
+  useEffect(() => {
+    async function load() {
+      const [dolares, combustibles, cac] = await Promise.all([
+        getDolares(),
+        getCombustiblesMarDelPlata(),
+        getCACHistorico(),
+      ]);
+
+      const ultimoCAC = cac?.at(-1);
+
+      setDatos({
+        blue: dolares?.find((d) => d.nombre === "Blue")?.venta || "0",
+        ypf: combustibles?.ypf?.nafta?.super || "0",
+        cac: ultimoCAC ? formatNumber(ultimoCAC.general) : "No disp.",
+      });
+    }
+
+    load();
+  }, []);
+
+  const handleShare = () => {
+    const texto = `
+📊 *REPORTE ECONÓMICO*
+
+💵 *Dólar Blue:* $${datos.blue}
+⛽ *Nafta YPF:* $${datos.ypf}
+🏗️ *Índice CAC:* ${datos.cac}
+
+_Enviado desde mi Dashboard_
+    `.trim();
+
+    window.open(
+      `https://web.whatsapp.com/send?text=${encodeURIComponent(texto)}`,
+      "_blank",
+    );
   };
+
+  if (!datos) return null;
 
   return (
     <button
       onClick={handleShare}
-      className="fixed bottom-6 right-6 bg-[#25D366] text-white px-3 py-3 rounded-full shadow-2xl hover:bg-[#128C7E] transition-all font-bold flex items-center gap-3 z-50 border-2 border-white/20"
+      className="fixed bottom-6 right-6 bg-[#25D366] text-white
+                 p-3 rounded-full shadow-2xl hover:bg-[#128C7E]
+                 transition-all z-50 border-2 border-white/20"
     >
-      {/* El logo oficial de WhatsApp */}
       <img
         src="/logos/whatsapp.png"
         alt="WhatsApp"
-        className="w-6 h-6 brightness-0 invert" // Esto pone el logo en blanco si es oscuro
+        className="w-6 h-6 brightness-0 invert"
       />
-      {/* <span>Compartir reporte</span> */}
     </button>
   );
 }
