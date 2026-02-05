@@ -43,12 +43,15 @@ export default function ShareButton() {
 🏗️ *Índice CAC:* ${datos.cac}
 
 _Enviado desde mi Dashboard_
-    `.trim();
+  `.trim();
 
-    window.open(
-      `https://web.whatsapp.com/send?text=${encodeURIComponent(texto)}`,
-      "_blank",
-    );
+    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+    const baseUrl = isMobile
+      ? "https://api.whatsapp.com/send"
+      : "https://web.whatsapp.com/send";
+
+    window.open(`${baseUrl}?text=${encodeURIComponent(texto)}`, "_blank");
   };
 
   if (!datos) return null;
