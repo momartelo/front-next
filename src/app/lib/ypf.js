@@ -124,9 +124,7 @@ export async function getCombustiblesMarDelPlata() {
       puma: buildEmpresa(records, "puma", "Puma"),
     };
   } catch (error) {
-    // Si algo falla, restauramos la seguridad por las dudas
-    process.env.NODE_TLS_REJECT_UNAUTHORIZED = "1";
-    console.error("Error en Combustibles:", error.message);
+    console.error("Error en Combustibles:", error);
     return null;
   }
 }

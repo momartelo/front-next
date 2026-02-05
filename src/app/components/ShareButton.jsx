@@ -1,40 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { getDolares } from "@/app/lib/dolar";
-import { getCombustiblesMarDelPlata } from "@/app/lib/ypf";
-import { getCACHistorico } from "@/app/lib/cac";
-
-export default function ShareButton() {
-  const [datos, setDatos] = useState(null);
-
+export default function ShareButton({ datos }) {
   const formatNumber = (value) =>
     Number(value).toLocaleString("es-AR", {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     });
-
-  useEffect(() => {
-    async function load() {
-      const [dolares, combustibles, cac] = await Promise.all([
-        getDolares(),
-        getCombustiblesMarDelPlata(),
-        getCACHistorico(),
-      ]);
-
-      console.log("COMBUSTIBLES:", combustibles);
-
-      const ultimoCAC = cac?.at(-1);
-
-      setDatos({
-        blue: dolares?.find((d) => d.nombre === "Blue")?.venta || "0",
-        ypf: combustibles?.ypf?.nafta?.super || "0",
-        cac: ultimoCAC ? formatNumber(ultimoCAC.general) : "No disp.",
-      });
-    }
-
-    load();
-  }, []);
 
   const handleShare = () => {
     const texto = `
@@ -42,10 +13,10 @@ export default function ShareButton() {
 
 💵 *Dólar Blue:* $${datos.blue}
 ⛽ *Nafta YPF:* $${datos.ypf}
-🏗️ *Índice CAC:* ${datos.cac}
+🏗️ *Índice CAC:* ${formatNumber(datos.cac)}
 
 _Enviado desde mi Dashboard_
-  `.trim();
+`.trim();
 
     const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
@@ -55,8 +26,6 @@ _Enviado desde mi Dashboard_
 
     window.open(`${baseUrl}?text=${encodeURIComponent(texto)}`, "_blank");
   };
-
-  if (!datos) return null;
 
   return (
     <button

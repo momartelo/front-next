@@ -10,7 +10,26 @@ import ShareButton from "./components/ShareButton";
 import CACSelectorSection from "./sections/CACSelectorSection";
 import CACSChartSection from "./sections/CACChartSection";
 
-export default function Dashboard() {
+import { getDolares } from "./lib/dolar";
+import { getCombustiblesMarDelPlata } from "./lib/ypf";
+import { getCACHistorico } from "./lib/cac";
+
+export default async function Dashboard() {
+  // 👉 fetch server (1 sola vez)
+  const [dolares, combustibles, cac] = await Promise.all([
+    getDolares(),
+    getCombustiblesMarDelPlata(),
+    getCACHistorico(),
+  ]);
+
+  const ultimoCAC = cac?.at(-1);
+
+  const shareData = {
+    blue: dolares?.find((d) => d.nombre === "Blue")?.venta || "0",
+    ypf: combustibles?.ypf?.nafta?.super || "0",
+    cac: ultimoCAC?.general || "0",
+  };
+
   return (
     <main className="p-6 max-w-7xl mx-auto">
       <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_0.4fr]">
@@ -18,7 +37,7 @@ export default function Dashboard() {
           <DolaresSection />
         </Suspense>
 
-        <div className="flex flex-col gap-4 ">
+        <div className="flex flex-col gap-4">
           <Suspense fallback={<CardSkeleton title="Euro / Real" />}>
             <MonedasSection />
           </Suspense>
@@ -28,7 +47,7 @@ export default function Dashboard() {
           </Suspense>
         </div>
 
-        <div className="flex flex-col gap-4 ">
+        <div className="flex flex-col gap-4">
           <Suspense fallback={<CardSkeleton title="Inflación" />}>
             <InflacionSection />
           </Suspense>
@@ -37,20 +56,24 @@ export default function Dashboard() {
             <IndicesSection />
           </Suspense>
         </div>
+
         <div id="cac" className="flex flex-col">
           <Suspense fallback={<CardSkeleton title="CAC" />}>
             <CACSection />
           </Suspense>
+
           <Suspense fallback={<CardSkeleton title="Evolución CAC" />}>
             <CACSChartSection />
           </Suspense>
         </div>
+
         <Suspense fallback={<CardSkeleton title="Evolución CAC" />}>
           <CACSelectorSection />
         </Suspense>
       </section>
 
-      <ShareButton />
+      {/* 👉 le pasamos los datos ya listos */}
+      <ShareButton datos={shareData} />
     </main>
   );
 }
