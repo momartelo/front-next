@@ -180,6 +180,7 @@ export default function InflationDashboard() {
               alignItems="center"
               mb={2}
               flexWrap="wrap"
+              rowGap={"15px"}
             >
               {/* DatePickers */}
               <Stack
@@ -247,7 +248,7 @@ export default function InflationDashboard() {
                 }}
               />
             </div>
-            <div className="border rounded-lg p-3 bg-gray-50 dark:bg-gray-900 overflow-hidden">
+            <div className="border rounded-lg p-3 bg-gray-50 dark:bg-gray-900 overflow-hidden w-1/2 sm:w-auto mx-auto sm:mx-0">
               <h3 className="text-center text-sm font-semibold mb-2 text-gray-700 dark:text-gray-300 sticky top-0 bg-gray-50 dark:bg-gray-900 z-10 py-1">
                 Valores del período
               </h3>
