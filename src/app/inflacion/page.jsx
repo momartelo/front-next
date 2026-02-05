@@ -237,7 +237,7 @@ export default function InflationDashboard() {
 
       {/* Gráfico */}
       {filtrada.length > 0 ? (
-        <div className="w-full max-w-none 2xl:px-8 bg-white dark:bg-gray-800 p-2 md:p-4 rounded shadow">
+        <div className=" w-full  2xl:w-[calc(100%-6rem)]  2xl:mx-12  2xl:mt-6 bg-white  dark:bg-gray-800  p-2 md:p-4  rounded shadow">
           <div className="grid grid-cols-1 xl:grid-cols-[1fr_220px] gap-4">
             <div className="h-[45vh] md:h-[50vh] xl:h-[65vh]">
               <Line

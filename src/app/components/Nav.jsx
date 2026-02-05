@@ -18,9 +18,9 @@ export default function Nav() {
           {[
             ["Inicio", "/"],
             ["Inflación", "/inflacion"],
-            ["Dólar", "#dolar"],
-            ["Combustibles", "#combustibles"],
-            ["CAC", "#cac"],
+            ["Dólar", "/dolar"],
+            ["Combustibles", "/combustibles"],
+            ["CAC", "/cac"],
           ].map(([label, href]) => (
             <a
               key={label}
