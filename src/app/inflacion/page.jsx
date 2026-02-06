@@ -168,7 +168,10 @@ export default function InflationDashboard() {
 
       <div className="mt-2 xl:mt-4 2xl:mt-4">
         <ThemeProvider theme={muiTheme}>
-          <LocalizationProvider dateAdapter={AdapterDateFns} locale={esLocale}>
+          <LocalizationProvider
+            dateAdapter={AdapterDateFns}
+            adapterLocale={esLocale}
+          >
             <Stack
               direction="row"
               spacing={3}
