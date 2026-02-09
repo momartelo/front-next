@@ -1,6 +1,17 @@
 const BASE_URL = "https://dolarapi.com/v1";
+const DOLARES_URL = "https://api.argentinadatos.com/v1/cotizaciones/dolares";
 
 const isDev = process.env.NODE_ENV === "development";
+
+export async function getDolaresHistorico() {
+  const res = await fetch(DOLARES_URL, {
+    cache: isDev ? "no-store" : undefined,
+  });
+  if (!res.ok) {
+    throw new Error("Error obteniendo dolares");
+  }
+  return res.json();
+}
 
 export async function getDolares() {
   const res = await fetch(`${BASE_URL}/dolares`, {

@@ -25,11 +25,12 @@ ChartJS.register(
   Legend,
 );
 
-import { Button, Stack } from "@mui/material";
+import { Button, Stack, CircularProgress } from "@mui/material";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 import { LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import esLocale from "date-fns/locale/es";
+import { formatMesAnio } from "../lib/functions";
 
 // 👉 DatePicker solo en cliente
 const DatePicker = dynamic(
@@ -42,7 +43,10 @@ export default function InflationDashboard() {
   const [fechaInicio, setFechaInicio] = useState(null);
   const [fechaFin, setFechaFin] = useState(null);
   const [filtrada, setFiltrada] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [isFiltering, setIsFiltering] = useState(false);
   const [mounted, setMounted] = useState(false);
+
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === "dark";
 
@@ -55,6 +59,7 @@ export default function InflationDashboard() {
       }),
     [isDark],
   );
+
   useEffect(() => {
     setMounted(true);
   }, []);
@@ -65,44 +70,29 @@ export default function InflationDashboard() {
       const sorted = data.sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
       setInflacionHistorica(sorted);
       setFiltrada(sorted);
+      setLoading(false);
     });
   }, []);
 
-  // 🔥 FILTRADO AUTOMÁTICO
+  // 🔥 FILTRADO AUTOMÁTICO (con loading)
   useEffect(() => {
     if (!inflacionHistorica.length) return;
 
-    // si no hay fechas, mostrar todo
-    if (!fechaInicio && !fechaFin) {
-      setFiltrada(inflacionHistorica);
-      return;
-    }
+    setIsFiltering(true);
 
-    const filtered = inflacionHistorica.filter((item) => {
-      const fecha = new Date(item.fecha);
-      if (fechaInicio && fecha < fechaInicio) return false;
-      if (fechaFin && fecha > fechaFin) return false;
-      return true;
-    });
+    const filtered =
+      !fechaInicio && !fechaFin
+        ? inflacionHistorica
+        : inflacionHistorica.filter((item) => {
+            const fecha = new Date(item.fecha);
+            if (fechaInicio && fecha < fechaInicio) return false;
+            if (fechaFin && fecha > fechaFin) return false;
+            return true;
+          });
 
     setFiltrada(filtered);
+    setIsFiltering(false);
   }, [fechaInicio, fechaFin, inflacionHistorica]);
-
-  if (!mounted) return null;
-
-  const handleReset = () => {
-    setFechaInicio(null);
-    setFechaFin(null);
-  };
-
-  const formatMesAnio = (fecha) => {
-    const d = new Date(fecha);
-    const mes = d
-      .toLocaleDateString("es-AR", { month: "short" })
-      .replace(".", "");
-    const anio = d.getFullYear().toString().slice(-2);
-    return `${mes}-${anio}`;
-  };
 
   const handleUltimos12Meses = () => {
     if (inflacionHistorica.length === 0) return;
@@ -113,52 +103,73 @@ export default function InflationDashboard() {
     setFechaFin(new Date(ultimos12[ultimos12.length - 1].fecha));
   };
 
-  const chartData = {
-    labels: filtrada.map((item) =>
-      new Date(item.fecha).toLocaleDateString("es-AR", {
-        month: "short",
-        year: "numeric",
-      }),
-    ),
-    datasets: [
-      {
-        label: "Inflación mensual (%)",
-        data: filtrada.map((item) => item.valor),
-        borderColor: "#3B82F6",
-        backgroundColor: "rgba(59,130,246,0.2)",
-        tension: 0.3,
-      },
-    ],
+  const handleResetDates = () => {
+    setFechaInicio(null);
+    setFechaFin(null);
   };
 
-  const chartOptions = {
-    responsive: true,
-    plugins: {
-      legend: {
-        labels: {
-          color: isDark ? "#E5E7EB" : "#111827",
+  // 🔹 DOWN-SAMPLING para que el gráfico no se trabe
+  const filtradaReducida = useMemo(() => {
+    if (!filtrada.length) return [];
+    if (filtrada.length <= 400) return filtrada;
+
+    const step = Math.ceil(filtrada.length / 400);
+    return filtrada.filter((_, idx) => idx % step === 0);
+  }, [filtrada]);
+
+  const chartData = useMemo(() => {
+    return {
+      labels: filtradaReducida.map((item) =>
+        new Date(item.fecha).toLocaleDateString("es-AR", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+        }),
+      ),
+      datasets: [
+        {
+          label: "Inflación mensual (%)",
+          data: filtradaReducida.map((item) => item.valor),
+          borderColor: "#3B82F6",
+          backgroundColor: "rgba(59,130,246,0.2)",
+          tension: 0.3,
+        },
+      ],
+    };
+  }, [filtradaReducida]);
+
+  const chartOptions = useMemo(() => {
+    return {
+      responsive: true,
+      plugins: {
+        legend: {
+          labels: {
+            color: isDark ? "#E5E7EB" : "#111827",
+          },
         },
       },
-    },
-    scales: {
-      x: {
-        ticks: {
-          color: isDark ? "#E5E7EB" : "#111827",
+      scales: {
+        x: {
+          ticks: {
+            color: isDark ? "#E5E7EB" : "#111827",
+          },
+          grid: {
+            color: isDark ? "rgba(255,255,255,0.1)" : "#e5e7eb",
+          },
         },
-        grid: {
-          color: isDark ? "rgba(255,255,255,0.1)" : "#e5e7eb",
+        y: {
+          ticks: {
+            color: isDark ? "#E5E7EB" : "#111827",
+          },
+          grid: {
+            color: isDark ? "rgba(255,255,255,0.1)" : "#e5e7eb",
+          },
         },
       },
-      y: {
-        ticks: {
-          color: isDark ? "#E5E7EB" : "#111827",
-        },
-        grid: {
-          color: isDark ? "rgba(255,255,255,0.1)" : "#e5e7eb",
-        },
-      },
-    },
-  };
+    };
+  }, [isDark]);
+
+  if (!mounted) return null;
 
   return (
     <div className="p-4 flex flex-col items-center min-h-screen">
@@ -218,7 +229,11 @@ export default function InflationDashboard() {
 
               {/* Botones */}
               <Stack direction="row" spacing={2} justifyContent="center" mb={2}>
-                <Button variant="outlined" color="error" onClick={handleReset}>
+                <Button
+                  variant="outlined"
+                  color="error"
+                  onClick={handleResetDates}
+                >
                   Reset
                 </Button>
                 <Button
@@ -226,7 +241,7 @@ export default function InflationDashboard() {
                   color="success"
                   onClick={handleUltimos12Meses}
                 >
-                  Últimos 12 indices
+                  Últimos 12 índices
                 </Button>
               </Stack>
             </Stack>
@@ -235,7 +250,15 @@ export default function InflationDashboard() {
       </div>
 
       {/* Gráfico */}
-      {filtrada.length > 0 ? (
+      {loading ? (
+        <div className="mt-8">
+          <CircularProgress />
+        </div>
+      ) : isFiltering ? (
+        <div className="mt-8">
+          <CircularProgress />
+        </div>
+      ) : filtradaReducida.length > 0 ? (
         <div className=" w-full  2xl:w-[calc(100%-6rem)]  2xl:mx-12  2xl:mt-6 p-2 md:p-4  rounded shadow">
           <div className="grid grid-cols-1 xl:grid-cols-[1fr_220px] gap-4">
             <div className="h-[45vh] md:h-[50vh] xl:h-[65vh]">

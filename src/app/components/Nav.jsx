@@ -32,7 +32,11 @@ export default function Nav() {
             ["Combustibles", "/combustibles"],
             ["CAC", "/cac"],
           ].map(([label, href]) => (
-            <a key={label} href={href}>
+            <a
+              key={label}
+              href={href}
+              className="relative px-1 py-2 transition-colors duration-300 hover:text-blue-300 after:absolute after:left-0 after:-bottom-px after:h-0.5 after:w-0 after:bg-blue-300  after:transition-all after:duration-300 hover:after:w-full"
+            >
               {label}
             </a>
           ))}

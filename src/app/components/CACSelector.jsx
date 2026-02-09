@@ -230,7 +230,7 @@ export default function CACSelector({ cacHistorico, ultimoCAC }) {
 
             {/* RESULTADO */}
             {updatedAmount && (
-              <div className="pt-2 text-center bg-green-50 rounded-lg py-3 border border-green-100">
+              <div className="mt-4 pt-2 text-center bg-green-50 rounded-lg py-3 border border-green-100">
                 <p className="text-xs text-green-700 font-medium uppercase tracking-wider">
                   Monto actualizado
                 </p>
