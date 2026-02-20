@@ -13,7 +13,20 @@ export default async function CombustiblesSection() {
   const combustibles = await getCombustiblesMarDelPlata();
 
   if (!combustibles) {
-    return <Card title="Combustibles">No disponible</Card>;
+    return (
+      <Card
+        title={
+          <>
+            <span className="block w-full text-center pb-4 font-semibold">
+              Combustibles · Mar del Plata
+            </span>
+            <span className="block w-full text-center pb-4 font-semibold">
+              No disponibles
+            </span>
+          </>
+        }
+      ></Card>
+    );
   }
 
   return (

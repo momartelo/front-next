@@ -32,7 +32,6 @@ ChartJS.register(
   Legend,
 );
 
-// 👉 DatePicker solo en cliente
 const DatePicker = dynamic(
   () => import("@mui/x-date-pickers/DatePicker").then((mod) => mod.DatePicker),
   { ssr: false },
@@ -64,7 +63,7 @@ export default function DolarPage() {
     setMounted(true);
   }, []);
 
-  // 🔹 Carga datos (solo dólar oficial)
+  // 🔹 Carga datos + setea YTD por defecto
   useEffect(() => {
     getDolaresHistorico().then((data) => {
       const oficiales = data
@@ -72,12 +71,31 @@ export default function DolarPage() {
         .sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
 
       setDolarHistorico(oficiales);
-      setFiltrado(oficiales);
+
+      if (oficiales.length) {
+        const ultimaFecha = new Date(oficiales.at(-1).fecha);
+        const inicioAnio = new Date(ultimaFecha.getFullYear(), 0, 1);
+
+        setFechaInicio(inicioAnio);
+        setFechaFin(ultimaFecha);
+      }
+
       setLoading(false);
     });
   }, []);
 
-  // 🔹 Filtrado por fechas (con loading)
+  // 🔹 Límites de fechas
+  const minFecha = useMemo(() => {
+    if (!dolarHistorico.length) return null;
+    return new Date(dolarHistorico[0].fecha);
+  }, [dolarHistorico]);
+
+  const maxFecha = useMemo(() => {
+    if (!dolarHistorico.length) return null;
+    return new Date(dolarHistorico.at(-1).fecha);
+  }, [dolarHistorico]);
+
+  // 🔹 Filtrado
   useEffect(() => {
     if (!dolarHistorico.length) return;
 
@@ -125,7 +143,7 @@ export default function DolarPage() {
     setFechaFin(null);
   };
 
-  // 🔹 DOWN-SAMPLING para que el gráfico no se trabe
+  // 🔹 Downsampling
   const filtradoReducido = useMemo(() => {
     if (!filtrado.length) return [];
     if (filtrado.length <= 400) return filtrado;
@@ -190,50 +208,42 @@ export default function DolarPage() {
   if (!mounted) return null;
 
   return (
-    <div className="p-4 flex flex-col items-center min-h-screen">
+    <div className="p-4 flex flex-col items-center min-h-[calc(100vh-70px)]">
       <h1 className="text-2xl font-bold mb-4 text-center">
         Dólar oficial histórico
       </h1>
 
-      {/* Filtros */}
       <ThemeProvider theme={muiTheme}>
         <LocalizationProvider
           dateAdapter={AdapterDateFns}
           adapterLocale={esLocale}
         >
-          <Stack
-            direction="row"
-            spacing={2}
-            justifyContent="center"
-            mb={2}
-            className="mt-2 sm:mt-0"
-          >
+          <Stack direction="row" spacing={2} justifyContent="center" mb={2}>
             <DatePicker
               label="Desde"
               value={fechaInicio}
               onChange={setFechaInicio}
               views={["year", "month", "day"]}
+              minDate={minFecha}
+              maxDate={fechaFin || maxFecha}
               slotProps={{
-                textField: {
-                  size: "small",
-                  sx: { width: 200 },
-                },
+                textField: { size: "small", sx: { width: 200 } },
               }}
             />
+
             <DatePicker
               label="Hasta"
               value={fechaFin}
               onChange={setFechaFin}
               views={["year", "month", "day"]}
+              minDate={fechaInicio || minFecha}
+              maxDate={maxFecha}
               slotProps={{
-                textField: {
-                  size: "small",
-                  sx: { width: 200 },
-                },
+                textField: { size: "small", sx: { width: 200 } },
               }}
             />
 
-            <Stack direction="row" spacing={2} justifyContent="center" mb={2}>
+            <Stack direction="row" spacing={1}>
               <Button
                 size="small"
                 variant="outlined"
@@ -264,40 +274,52 @@ export default function DolarPage() {
                 color="error"
                 onClick={handleResetDates}
               >
-                Reset
+                Todos los valores
               </Button>
             </Stack>
           </Stack>
         </LocalizationProvider>
       </ThemeProvider>
 
-      {/* Gráfico + lista */}
-      {loading ? (
-        <div className="mt-8">
-          <CircularProgress />
-        </div>
-      ) : isFiltering ? (
+      {loading || isFiltering ? (
         <div className="mt-8">
           <CircularProgress />
         </div>
       ) : filtradoReducido.length > 0 ? (
-        <div className="w-full xl:w-[90%] grid grid-cols-1 xl:grid-cols-[1fr_220px] gap-4">
-          <div className="h-[60vh]">
+        <div className="w-full 2xl:w-[calc(100%-6rem)] 2xl:mx-12  2xl:mt-8 xl:w-[90%] grid grid-cols-1 xl:grid-cols-[1fr_220px] gap-4">
+          <div className="h-[60vh] 2xl:h-[65vh]">
             <Line
               data={chartData}
               options={{ ...chartOptions, maintainAspectRatio: false }}
             />
           </div>
 
-          <div className="border rounded-lg p-3 max-h-[60vh] overflow-y-auto">
-            {filtrado.map((item, idx) => (
-              <div key={idx} className="flex justify-between text-sm py-1">
-                <span>{formatFechaCompleta(item.fecha)}</span>
-                <span className="font-mono font-semibold">
-                  ${item.venta.toFixed(2)}
-                </span>
+          {/* Card de la Tabla Lateral */}
+          <div className="flex flex-col border border-gray-200 dark:border-neutral-800 rounded-xl bg-white dark:bg-neutral-900 shadow-sm overflow-hidden h-[60vh] 2xl:h-[65vh]">
+            {/* Encabezado Fijo */}
+            <div className="bg-gray-50 dark:bg-neutral-800/50 px-4 py-3 border-b border-gray-200 dark:border-neutral-800">
+              <div className="flex justify-between items-center text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 pl-4 pr-6 ">
+                <span>Fecha</span>
+                <span>Venta</span>
               </div>
-            ))}
+            </div>
+
+            {/* Cuerpo con Scroll */}
+            <div className="flex-1 overflow-y-auto custom-scrollbar">
+              {[...filtrado].reverse().map((item, idx) => (
+                <div
+                  key={idx}
+                  className="flex justify-between items-center px-4 py-2.5 border-b border-gray-100 dark:border-neutral-800 last:border-0 hover:bg-blue-50 dark:hover:bg-blue-900/10 transition-colors group"
+                >
+                  <span className="text-sm text-gray-600 dark:text-gray-300 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                    {formatFechaCompleta(item.fecha)}
+                  </span>
+                  <span className="font-mono text-sm font-bold text-blue-500 dark:text-blue-300 bg-gray-100 dark:bg-neutral-800 px-2 py-0.5 rounded shadow-sm">
+                    ${item.venta.toFixed(2)}
+                  </span>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       ) : (

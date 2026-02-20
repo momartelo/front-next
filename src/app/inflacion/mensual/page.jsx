@@ -3,7 +3,7 @@
 import dynamic from "next/dynamic";
 import { useState, useEffect, useMemo } from "react";
 import { Line } from "react-chartjs-2";
-import { getInflacionMensualHistorica } from "../lib/inflacion";
+import { getInflacionMensualHistorica } from "../../lib/inflacion";
 import { useTheme } from "next-themes";
 
 import {
@@ -30,7 +30,7 @@ import { createTheme, ThemeProvider } from "@mui/material/styles";
 import { LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import esLocale from "date-fns/locale/es";
-import { formatMesAnio } from "../lib/functions";
+import { formatMesAnio } from "../../lib/functions";
 
 // 👉 DatePicker solo en cliente
 const DatePicker = dynamic(
@@ -172,7 +172,7 @@ export default function InflationDashboard() {
   if (!mounted) return null;
 
   return (
-    <div className="p-4 flex flex-col items-center min-h-screen">
+    <div className="p-4 flex flex-col items-center min-h-[calc(100vh-70px)]">
       <h1 className="text-2xl font-bold mb-4 text-center">
         Inflación mensual histórica
       </h1>
@@ -259,7 +259,7 @@ export default function InflationDashboard() {
           <CircularProgress />
         </div>
       ) : filtradaReducida.length > 0 ? (
-        <div className=" w-full  2xl:w-[calc(100%-6rem)]  2xl:mx-12  2xl:mt-6 p-2 md:p-4  rounded shadow">
+        <div className=" w-full  2xl:w-[calc(100%-6rem)]  2xl:mx-12  2xl:mt-6 p-2 md:p-4 ">
           <div className="grid grid-cols-1 xl:grid-cols-[1fr_220px] gap-4">
             <div className="h-[45vh] md:h-[50vh] xl:h-[65vh]">
               <Line
@@ -270,22 +270,27 @@ export default function InflationDashboard() {
                 }}
               />
             </div>
-            <div className="border rounded-lg p-3 overflow-hidden w-1/2 sm:w-auto mx-auto sm:mx-0">
-              <h3 className="text-center text-sm font-semibold mb-2  sticky top-0  z-10 py-1">
-                Valores del período
-              </h3>
+            {/* Card de la Tabla de Valores del Período */}
+            <div className="flex flex-col border border-gray-200 dark:border-neutral-800 rounded-xl bg-white dark:bg-neutral-900 shadow-sm overflow-hidden h-[45vh] md:h-[50vh] xl:h-[65vh]">
+              {/* Encabezado Fijo */}
+              <div className="bg-gray-50 dark:bg-neutral-800/50 px-4 py-3 border-b border-gray-200 dark:border-neutral-800">
+                <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                  <span>Período</span>
+                  <span>Variación</span>
+                </div>
+              </div>
 
-              <div className="max-h-[55vh] overflow-y-auto space-y-1 pr-1">
-                {filtrada.map((item, idx) => (
+              {/* Cuerpo con Scroll */}
+              <div className="flex-1 overflow-y-auto custom-scrollbar">
+                {[...filtrada].reverse().map((item, idx) => (
                   <div
                     key={idx}
-                    className={`flex justify-between items-center px-2 py-1 rounded transition `}
+                    className="flex justify-between items-center px-4 py-2.5 border-b border-gray-100 dark:border-neutral-800 last:border-0 hover:bg-blue-50 dark:hover:bg-blue-900/10 transition-colors group"
                   >
-                    <span className="text-xs  ">
+                    <span className="text-sm text-gray-600 dark:text-gray-300 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
                       {formatMesAnio(item.fecha)}
                     </span>
-
-                    <span className="text-sm font-mono font-semibold  ">
+                    <span className="font-mono text-sm font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 px-2 py-0.5 rounded">
                       {item.valor.toFixed(2)}%
                     </span>
                   </div>

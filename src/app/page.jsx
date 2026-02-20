@@ -16,11 +16,26 @@ import { getCACHistorico } from "./lib/cac";
 
 export default async function Dashboard() {
   // 👉 fetch server (1 sola vez)
-  const [dolares, combustibles, cac] = await Promise.all([
-    getDolares(),
-    getCombustiblesMarDelPlata(),
-    getCACHistorico(),
-  ]);
+  // const [dolares, combustibles, cac] = await Promise.all([
+  //   getDolares(),
+  //   getCombustiblesMarDelPlata(),
+  //   getCACHistorico(),
+  // ]);
+
+  const dolaresPromise = getDolares();
+  const combustiblesPromise = getCombustiblesMarDelPlata();
+  const cacPromise = getCACHistorico();
+
+  const dolares = await dolaresPromise;
+  const cac = await cacPromise;
+
+  // combustibles puede fallar sin romper todo
+  let combustibles = null;
+  try {
+    combustibles = await combustiblesPromise;
+  } catch {
+    combustibles = null;
+  }
 
   const ultimoCAC = cac?.at(-1);
 

@@ -95,16 +95,20 @@ export async function getCombustiblesMarDelPlata() {
 
     const url = `${DATASET_URL}&limit=1000`;
 
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 8000); // 8 segundos máx
+
     const res = await fetch(url, {
       method: "GET",
       cache: "no-store",
-      // @ts-ignore (esto funciona en Node.js runtime)
-      //   agent: agent,
+      signal: controller.signal,
       headers: {
         "User-Agent": "Mozilla/5.0",
         Accept: "application/json",
       },
     });
+
+    clearTimeout(timeout);
 
     // 2. Restauramos la seguridad SSL para el resto de la aplicación
     // process.env.NODE_TLS_REJECT_UNAUTHORIZED = "1";
