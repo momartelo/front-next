@@ -101,6 +101,69 @@ export default function CACSelector({ cacHistorico, ultimoCAC }) {
     return (base / selectedCAC[indice]) * ultimoCAC[indice];
   }, [baseAmount, selectedCAC, ultimoCAC, indice]);
 
+  /* ===============================
+   VARIACIÓN vs ÚLTIMO CAC
+   =============================== */
+  const variacion = useMemo(() => {
+    if (!selectedCAC || !ultimoCAC) return null;
+
+    const seleccionado = selectedCAC[indice];
+    const ultimo = ultimoCAC[indice];
+
+    if (!seleccionado || !ultimo) return null;
+
+    return ((seleccionado - ultimo) / ultimo) * 100;
+  }, [selectedCAC, ultimoCAC, indice]);
+
+  const renderVariacion = (valor) => {
+    if (valor === null) return null;
+
+    return (
+      <span
+        className={`flex items-center justify-center gap-1 mt-1 text-sm font-semibold ${
+          valor > 0
+            ? "text-red-600"
+            : valor < 0
+              ? "text-green-600"
+              : "text-gray-500"
+        }`}
+      >
+        {valor > 0 && (
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="w-4 h-4"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+          >
+            <path d="M12 4l6 8h-4v8h-4v-8H6z" />
+          </svg>
+        )}
+        {valor < 0 && (
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="w-4 h-4"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+          >
+            <path d="M12 20l-6-8h4V4h4v8h4z" />
+          </svg>
+        )}
+        {valor === 0 && (
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="w-4 h-4"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+          >
+            <circle cx="12" cy="12" r="5" />
+          </svg>
+        )}
+        {Math.abs(valor).toFixed(2)}%
+        <span className="text-xs font-normal text-gray-500">vs actual</span>
+      </span>
+    );
+  };
+
   const formatNumber = (value) =>
     Number(value).toLocaleString("es-AR", {
       minimumFractionDigits: 2,
@@ -138,7 +201,7 @@ export default function CACSelector({ cacHistorico, ultimoCAC }) {
         {/* SELECTORES AÑO / MES */}
         <div className="flex gap-4">
           <select
-            className={inputClassName}
+            className={`${inputClassName} dark:bg-black `}
             value={selectedMonth ?? ""}
             onChange={(e) => setSelectedMonth(Number(e.target.value))}
             disabled={!selectedYear}
@@ -154,7 +217,7 @@ export default function CACSelector({ cacHistorico, ultimoCAC }) {
           </select>
 
           <select
-            className={inputClassName}
+            className={`${inputClassName} dark:bg-black `}
             value={selectedYear ?? ""}
             onChange={(e) => {
               setSelectedYear(Number(e.target.value));
@@ -173,9 +236,12 @@ export default function CACSelector({ cacHistorico, ultimoCAC }) {
         {selectedCAC ? (
           <div className="pt-2 border-t border-gray-200 space-y-2">
             {/* ÍNDICE PRINCIPAL */}
-            <p className="text-3xl font-bold text-blue-600 text-center">
-              {formatNumber(selectedCAC[indice])}
-            </p>
+            <div className="text-center">
+              <p className="text-3xl font-bold text-blue-600">
+                {formatNumber(selectedCAC[indice])}
+              </p>
+              {renderVariacion(variacion)}
+            </div>
 
             {/* OTROS ÍNDICES */}
             <div className="flex justify-center gap-6 text-sm">
@@ -198,7 +264,7 @@ export default function CACSelector({ cacHistorico, ultimoCAC }) {
                 Tipo de índice
               </label>
               <select
-                className={inputClassName}
+                className={`${inputClassName} dark:bg-black `}
                 value={indice}
                 onChange={(e) => setIndice(e.target.value)}
               >

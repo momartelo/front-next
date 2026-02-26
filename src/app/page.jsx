@@ -72,7 +72,7 @@ export default async function Dashboard() {
           </Suspense>
         </div>
 
-        <div id="cac" className="flex flex-col">
+        {/* <div id="cac" className="flex flex-col">
           <Suspense fallback={<CardSkeleton title="CAC" />}>
             <CACSection />
           </Suspense>
@@ -84,7 +84,7 @@ export default async function Dashboard() {
 
         <Suspense fallback={<CardSkeleton title="Evolución CAC" />}>
           <CACSelectorSection />
-        </Suspense>
+        </Suspense> */}
       </section>
 
       {/* 👉 le pasamos los datos ya listos */}

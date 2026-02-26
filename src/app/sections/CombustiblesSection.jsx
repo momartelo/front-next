@@ -37,7 +37,7 @@ export default async function CombustiblesSection() {
         </span>
       }
     >
-      <div className="grid grid-cols-2 gap-3 sm:gap-4">
+      <div className="grid grid-cols-2 gap-2 sm:gap-2">
         {Object.entries(combustibles).map(([key, e]) => {
           if (!e) return null;
 
@@ -61,6 +61,7 @@ export default async function CombustiblesSection() {
             </div>
           );
         })}
+        <p className="text-gray-400 text-xs">Fuente: Secretaria de energia</p>
       </div>
     </Card>
   );

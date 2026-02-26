@@ -172,12 +172,12 @@ export default function InflationDashboard() {
   if (!mounted) return null;
 
   return (
-    <div className="p-4 flex flex-col items-center min-h-[calc(100vh-70px)]">
+    <div className="p-2 flex flex-col items-center min-h-[calc(100vh-70px)]">
       <h1 className="text-2xl font-bold mb-4 text-center">
         Inflación mensual histórica
       </h1>
 
-      <div className="mt-2 xl:mt-4 2xl:mt-4">
+      <div className="mt-2 xl:mt-0 2xl:mt-4">
         <ThemeProvider theme={muiTheme}>
           <LocalizationProvider
             dateAdapter={AdapterDateFns}
