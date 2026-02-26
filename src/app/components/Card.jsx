@@ -3,14 +3,15 @@ export default function Card({
   children,
   center = false,
   noBorder = false,
-  titleCenter = true, // por defecto centrado
+  titleCenter = true,
+  padding = 16,
 }) {
   return (
     <div
       style={{
         border: noBorder ? "none" : "1px solid #e5e5e5",
         borderRadius: 8,
-        padding: 16,
+        padding: padding,
       }}
     >
       <h3

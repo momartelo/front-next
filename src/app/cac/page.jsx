@@ -7,8 +7,8 @@ import CACSChartSection from "../sections/CACChartSection";
 export default async function Dashboard() {
   return (
     <main className="p-6">
-      <section className="max-w-5xl mx-auto grid gap-4 md:grid-cols-2">
-        <div id="cac" className="flex flex-col">
+      <section className="2xl:h-[70vh] 2xl:max-w-7xl max-w-5xl mx-auto grid gap-4 md:grid-cols-2">
+        <div id="cac" className="flex flex-col h-full">
           <Suspense fallback={<CardSkeleton title="CAC" />}>
             <CACSection />
           </Suspense>
