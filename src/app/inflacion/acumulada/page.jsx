@@ -3,7 +3,7 @@
 import dynamic from "next/dynamic";
 import { useState, useEffect, useMemo } from "react";
 import { Line } from "react-chartjs-2";
-import { getInflacionMensualHistorica } from "../../lib/inflacion";
+import { getInflacionInteranual } from "../../lib/inflacion";
 import { useTheme } from "next-themes";
 
 import {
@@ -38,8 +38,8 @@ const DatePicker = dynamic(
   { ssr: false },
 );
 
-export default function InflationDashboard() {
-  const [inflacionHistorica, setInflacionHistorica] = useState([]);
+export default function InflacionInteranualPage() {
+  const [inflacionInteranual, setInflacionInteranual] = useState([]);
   const [fechaInicio, setFechaInicio] = useState(null);
   const [fechaFin, setFechaFin] = useState(null);
   const [filtrada, setFiltrada] = useState([]);
@@ -64,26 +64,35 @@ export default function InflationDashboard() {
     setMounted(true);
   }, []);
 
-  // Carga datos
+  // 🔹 Carga datos
   useEffect(() => {
-    getInflacionMensualHistorica().then((data) => {
-      const sorted = data.sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
-      setInflacionHistorica(sorted);
-      setFiltrada(sorted);
-      setLoading(false);
-    });
+    async function loadData() {
+      try {
+        const data = await getInflacionInteranual();
+        const sorted = data.sort(
+          (a, b) => new Date(a.fecha) - new Date(b.fecha),
+        );
+        setInflacionInteranual(sorted);
+        setFiltrada(sorted);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadData();
   }, []);
 
-  // 🔥 FILTRADO AUTOMÁTICO (con loading)
+  // 🔹 Filtrado por fechas
   useEffect(() => {
-    if (!inflacionHistorica.length) return;
+    if (!inflacionInteranual.length) return;
 
     setIsFiltering(true);
 
     const filtered =
       !fechaInicio && !fechaFin
-        ? inflacionHistorica
-        : inflacionHistorica.filter((item) => {
+        ? inflacionInteranual
+        : inflacionInteranual.filter((item) => {
             const fecha = new Date(item.fecha);
             if (fechaInicio && fecha < fechaInicio) return false;
             if (fechaFin && fecha > fechaFin) return false;
@@ -92,13 +101,12 @@ export default function InflationDashboard() {
 
     setFiltrada(filtered);
     setIsFiltering(false);
-  }, [fechaInicio, fechaFin, inflacionHistorica]);
+  }, [fechaInicio, fechaFin, inflacionInteranual]);
 
   const handleUltimos12Meses = () => {
-    if (inflacionHistorica.length === 0) return;
+    if (inflacionInteranual.length === 0) return;
 
-    const ultimos12 = inflacionHistorica.slice(-12);
-
+    const ultimos12 = inflacionInteranual.slice(-12);
     setFechaInicio(new Date(ultimos12[0].fecha));
     setFechaFin(new Date(ultimos12[ultimos12.length - 1].fecha));
   };
@@ -108,7 +116,7 @@ export default function InflationDashboard() {
     setFechaFin(null);
   };
 
-  // 🔹 DOWN-SAMPLING para que el gráfico no se trabe
+  // 🔹 Down-sampling para performance
   const filtradaReducida = useMemo(() => {
     if (!filtrada.length) return [];
     if (filtrada.length <= 400) return filtrada;
@@ -117,21 +125,21 @@ export default function InflationDashboard() {
     return filtrada.filter((_, idx) => idx % step === 0);
   }, [filtrada]);
 
+  // 🔹 Datos del gráfico
   const chartData = useMemo(() => {
     return {
       labels: filtradaReducida.map((item) =>
         new Date(item.fecha).toLocaleDateString("es-AR", {
-          day: "2-digit",
-          month: "2-digit",
+          month: "short",
           year: "numeric",
         }),
       ),
       datasets: [
         {
-          label: "Inflación mensual (%)",
+          label: "Inflación interanual (%)",
           data: filtradaReducida.map((item) => item.valor),
-          borderColor: "#3B82F6",
-          backgroundColor: "rgba(59,130,246,0.2)",
+          borderColor: "#10B981",
+          backgroundColor: "rgba(16,185,129,0.2)",
           tension: 0.3,
         },
       ],
@@ -150,20 +158,12 @@ export default function InflationDashboard() {
       },
       scales: {
         x: {
-          ticks: {
-            color: isDark ? "#E5E7EB" : "#111827",
-          },
-          grid: {
-            color: isDark ? "rgba(255,255,255,0.1)" : "#e5e7eb",
-          },
+          ticks: { color: isDark ? "#E5E7EB" : "#111827" },
+          grid: { color: isDark ? "rgba(255,255,255,0.1)" : "#e5e7eb" },
         },
         y: {
-          ticks: {
-            color: isDark ? "#E5E7EB" : "#111827",
-          },
-          grid: {
-            color: isDark ? "rgba(255,255,255,0.1)" : "#e5e7eb",
-          },
+          ticks: { color: isDark ? "#E5E7EB" : "#111827" },
+          grid: { color: isDark ? "rgba(255,255,255,0.1)" : "#e5e7eb" },
         },
       },
     };
@@ -174,123 +174,95 @@ export default function InflationDashboard() {
   return (
     <div className="p-2 flex flex-col items-center min-h-[calc(100vh-70px)]">
       <h1 className="text-2xl font-semibold mb-4 text-center">
-        Inflación mensual histórica
+        Inflación interanual histórica
       </h1>
 
-      <div className="mt-2 xl:mt-0 2xl:mt-4">
-        <ThemeProvider theme={muiTheme}>
-          <LocalizationProvider
-            dateAdapter={AdapterDateFns}
-            adapterLocale={esLocale}
+      {/* Filtros */}
+      <ThemeProvider theme={muiTheme}>
+        <LocalizationProvider
+          dateAdapter={AdapterDateFns}
+          adapterLocale={esLocale}
+        >
+          <Stack
+            direction="row"
+            spacing={3}
+            justifyContent="center"
+            alignItems="center"
+            mb={2}
+            flexWrap="wrap"
+            rowGap="15px"
           >
-            <Stack
-              direction="row"
-              spacing={3}
-              justifyContent="center"
-              alignItems="center"
-              mb={2}
-              flexWrap="wrap"
-              rowGap={"15px"}
-            >
-              {/* DatePickers */}
-              <Stack
-                direction="row"
-                spacing={2}
-                justifyContent="center"
-                mb={2}
-                className="mt-2 sm:mt-0"
-              >
-                <DatePicker
-                  views={["year", "month"]}
-                  label="Desde"
-                  value={fechaInicio}
-                  onChange={setFechaInicio}
-                  slotProps={{
-                    textField: {
-                      size: "small",
-                      sx: { width: 200 },
-                    },
-                  }}
-                />
-
-                <DatePicker
-                  views={["year", "month"]}
-                  label="Hasta"
-                  value={fechaFin}
-                  onChange={setFechaFin}
-                  slotProps={{
-                    textField: {
-                      size: "small",
-                      sx: { width: 200 },
-                    },
-                  }}
-                />
-              </Stack>
-
-              {/* Botones */}
-              <Stack direction="row" spacing={2} justifyContent="center" mb={2}>
-                <Button
-                  variant="outlined"
-                  color="error"
-                  onClick={handleResetDates}
-                >
-                  Reset
-                </Button>
-                <Button
-                  variant="outlined"
-                  color="success"
-                  onClick={handleUltimos12Meses}
-                >
-                  Últimos 12 índices
-                </Button>
-              </Stack>
+            <Stack direction="row" spacing={2} justifyContent="center" mb={2}>
+              <DatePicker
+                views={["year", "month"]}
+                label="Desde"
+                value={fechaInicio}
+                onChange={setFechaInicio}
+                slotProps={{ textField: { size: "small", sx: { width: 200 } } }}
+              />
+              <DatePicker
+                views={["year", "month"]}
+                label="Hasta"
+                value={fechaFin}
+                onChange={setFechaFin}
+                slotProps={{ textField: { size: "small", sx: { width: 200 } } }}
+              />
             </Stack>
-          </LocalizationProvider>
-        </ThemeProvider>
-      </div>
 
-      {/* Gráfico */}
-      {loading ? (
-        <div className="mt-8">
-          <CircularProgress />
-        </div>
-      ) : isFiltering ? (
+            <Stack direction="row" spacing={2} justifyContent="center" mb={2}>
+              <Button
+                variant="outlined"
+                color="error"
+                onClick={handleResetDates}
+              >
+                Reset
+              </Button>
+              <Button
+                variant="outlined"
+                color="success"
+                onClick={handleUltimos12Meses}
+              >
+                Últimos 12 índices
+              </Button>
+            </Stack>
+          </Stack>
+        </LocalizationProvider>
+      </ThemeProvider>
+
+      {/* Gráfico y tabla */}
+      {loading || isFiltering ? (
         <div className="mt-8">
           <CircularProgress />
         </div>
       ) : filtradaReducida.length > 0 ? (
-        <div className=" w-full  2xl:w-[calc(100%-6rem)]  2xl:mx-12  2xl:mt-6 p-2 md:p-4 ">
+        <div className="w-full 2xl:w-[calc(100%-6rem)] 2xl:mx-12 2xl:mt-6 p-2 md:p-4">
           <div className="grid grid-cols-1 xl:grid-cols-[1fr_220px] gap-4">
+            {/* Gráfico */}
             <div className="h-[45vh] md:h-[50vh] xl:h-[65vh]">
               <Line
                 data={chartData}
-                options={{
-                  ...chartOptions,
-                  maintainAspectRatio: false,
-                }}
+                options={{ ...chartOptions, maintainAspectRatio: false }}
               />
             </div>
-            {/* Card de la Tabla de Valores del Período */}
+
+            {/* Tabla */}
             <div className="flex flex-col border border-gray-200 dark:border-neutral-800 rounded-xl bg-white dark:bg-neutral-900 shadow-sm overflow-hidden h-[45vh] md:h-[50vh] xl:h-[65vh]">
-              {/* Encabezado Fijo */}
               <div className="bg-gray-50 dark:bg-neutral-800/50 px-4 py-3 border-b border-gray-200 dark:border-neutral-800">
                 <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
                   <span>Período</span>
                   <span>Variación</span>
                 </div>
               </div>
-
-              {/* Cuerpo con Scroll */}
               <div className="flex-1 overflow-y-auto custom-scrollbar">
                 {[...filtrada].reverse().map((item, idx) => (
                   <div
                     key={idx}
-                    className="flex justify-between items-center px-4 py-2.5 border-b border-gray-100 dark:border-neutral-800 last:border-0 hover:bg-blue-50 dark:hover:bg-blue-900/10 transition-colors group"
+                    className="flex justify-between items-center px-4 py-2.5 border-b border-gray-100 dark:border-neutral-800 last:border-0 hover:bg-green-50 dark:hover:bg-green-900/10 transition-colors group"
                   >
-                    <span className="text-sm text-gray-600 dark:text-gray-300 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                    <span className="text-sm text-gray-600 dark:text-gray-300 group-hover:text-green-600 dark:group-hover:text-green-400 transition-colors">
                       {formatMesAnio(item.fecha)}
                     </span>
-                    <span className="font-mono text-sm font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 px-2 py-0.5 rounded">
+                    <span className="font-mono text-sm font-bold text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20 px-2 py-0.5 rounded">
                       {item.valor.toFixed(2)}%
                     </span>
                   </div>

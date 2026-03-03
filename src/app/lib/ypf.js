@@ -29,6 +29,7 @@ function getLatestPrice(rows, productNames) {
   const filtered = rows.filter((r) =>
     productNames.includes(normalize(r.producto)),
   );
+
   if (!filtered.length) return null;
 
   const sorted = filtered.sort(
@@ -120,6 +121,11 @@ export async function getCombustiblesMarDelPlata() {
 
     const json = await res.json();
     const records = json?.result?.records || [];
+    console.log(
+      records.filter((r) =>
+        normalize(r.empresa).includes(normalize("ALONSO CONSTANTINO RAUL")),
+      ),
+    );
 
     return {
       ypf: buildEmpresa(records, "ypf", "YPF"),

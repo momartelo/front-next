@@ -38,3 +38,7 @@ export async function getInflacionInteranualActual() {
 export async function getInflacionMensualHistorica() {
   return fetchInflacion("inflacion");
 }
+
+export async function getInflacionInteranual() {
+  return fetchInflacion("inflacionInteranual");
+}
