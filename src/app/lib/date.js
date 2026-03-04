@@ -1,5 +1,9 @@
 export function formatFechaHora(iso) {
-  const d = new Date(iso);
+  if (!iso) return null;
+
+  // Si la cadena ya tiene hora, no agregamos T00:00:00
+  const hasTime = iso.includes("T") || iso.includes(" ");
+  const d = new Date(hasTime ? iso : iso + "T00:00:00");
 
   return {
     fecha: d.toLocaleDateString("es-AR"),

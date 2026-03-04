@@ -13,6 +13,7 @@ const roboto = Roboto({
 export const metadata = {
   title: "Dashboard Económico",
   description: "Precios de combustibles y divisas en tiempo real",
+  icons: "/favicon.ico", // <-- Asegúrate de poner un favicon.ico real en public/
 };
 
 export default function RootLayout({ children }) {

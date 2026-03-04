@@ -287,7 +287,7 @@ export default function DolarPage() {
         </div>
       ) : filtradoReducido.length > 0 ? (
         <div className="w-full 2xl:w-[calc(100%-6rem)] 2xl:mx-12  2xl:mt-8 xl:w-[90%] grid grid-cols-1 xl:grid-cols-[1fr_220px] gap-4">
-          <div className="h-[60vh] 2xl:h-[65vh]">
+          <div className="h-[65vh] 2xl:h-[65vh]">
             <Line
               data={chartData}
               options={{ ...chartOptions, maintainAspectRatio: false }}

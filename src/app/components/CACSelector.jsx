@@ -296,11 +296,11 @@ export default function CACSelector({ cacHistorico, ultimoCAC }) {
 
             {/* RESULTADO */}
             {updatedAmount && (
-              <div className="mt-4 pt-2 text-center bg-green-50 rounded-lg py-3 border border-green-100">
-                <p className="text-xs text-green-700 font-medium uppercase tracking-wider">
+              <div className="mt-4 pt-2 text-center bg-green-50 dark:bg-emerald-950 rounded-lg py-3 border border-green-100">
+                <p className="text-xs text-green-700 dark:text-green-200 font-medium uppercase tracking-wider">
                   Monto actualizado
                 </p>
-                <p className="text-2xl font-bold text-green-600">
+                <p className="text-2xl font-bold text-green-600 dark:text-green-200">
                   ${formatNumber(updatedAmount)}
                 </p>
               </div>

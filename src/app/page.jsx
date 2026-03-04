@@ -5,23 +5,12 @@ import MonedasSection from "./sections/MonedasSection";
 import InflacionSection from "./sections/InflacionSection";
 import IndicesSection from "./sections/IndicesSection";
 import CombustiblesSection from "./sections/CombustiblesSection";
-import CACSection from "./sections/CACSection";
 import ShareButton from "./components/ShareButton";
-import CACSelectorSection from "./sections/CACSelectorSection";
-import CACSChartSection from "./sections/CACChartSection";
-
 import { getDolares } from "./lib/dolar";
 import { getCombustiblesMarDelPlata } from "./lib/ypf";
 import { getCACHistorico } from "./lib/cac";
 
 export default async function Dashboard() {
-  // 👉 fetch server (1 sola vez)
-  // const [dolares, combustibles, cac] = await Promise.all([
-  //   getDolares(),
-  //   getCombustiblesMarDelPlata(),
-  //   getCACHistorico(),
-  // ]);
-
   const dolaresPromise = getDolares();
   const combustiblesPromise = getCombustiblesMarDelPlata();
   const cacPromise = getCACHistorico();
@@ -29,7 +18,6 @@ export default async function Dashboard() {
   const dolares = await dolaresPromise;
   const cac = await cacPromise;
 
-  // combustibles puede fallar sin romper todo
   let combustibles = null;
   try {
     combustibles = await combustiblesPromise;
@@ -71,23 +59,8 @@ export default async function Dashboard() {
             <IndicesSection />
           </Suspense>
         </div>
-
-        {/* <div id="cac" className="flex flex-col">
-          <Suspense fallback={<CardSkeleton title="CAC" />}>
-            <CACSection />
-          </Suspense>
-
-          <Suspense fallback={<CardSkeleton title="Evolución CAC" />}>
-            <CACSChartSection />
-          </Suspense>
-        </div>
-
-        <Suspense fallback={<CardSkeleton title="Evolución CAC" />}>
-          <CACSelectorSection />
-        </Suspense> */}
       </section>
 
-      {/* 👉 le pasamos los datos ya listos */}
       <ShareButton datos={shareData} />
     </main>
   );

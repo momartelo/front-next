@@ -47,6 +47,7 @@ export default async function CombustiblesSection() {
                 <img src={LOGOS[key]} className="h-5" />
                 <p className="font-semibold text-blue-700">{e.empresa}</p>
               </div>
+
               <div className="mt-1 text-sm">
                 <p>Nafta Súper: ${e.nafta.super?.toFixed(2) ?? "-"}</p>
                 <p>Nafta Premium: ${e.nafta.premium?.toFixed(2) ?? "-"}</p>
@@ -55,13 +56,16 @@ export default async function CombustiblesSection() {
               </div>
 
               <small className="text-gray-400 text-xs">
-                Actualizado al:{" "}
-                {formatFechaHora(e.fechaActualizacion)?.fecha || "-"}
+                Actualizado al: {formatFechaHora(e.fechaActualizacion)?.fecha}
+                {e.manual ? " - Manualmente" : ""}
               </small>
             </div>
           );
         })}
-        <p className="text-gray-400 text-xs">Fuente: Secretaria de energia</p>
+
+        <p className="text-gray-400 text-xs col-span-2">
+          Fuente: Secretaría de Energía / Overrides manuales
+        </p>
       </div>
     </Card>
   );
