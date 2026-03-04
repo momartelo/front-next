@@ -14,14 +14,19 @@ export function middleware(req) {
     }
 
     const base64Credentials = authHeader.split(" ")[1];
-    const credentials = atob(base64Credentials);
+    const credentials = Buffer.from(base64Credentials, "base64").toString(
+      "utf-8",
+    );
+
     const [user, pass] = credentials.split(":");
 
     if (
       user !== process.env.ADMIN_PANEL_USER ||
       pass !== process.env.ADMIN_PANEL_PASS
     ) {
-      return new NextResponse("Invalid credentials", { status: 401 });
+      return new NextResponse("Invalid credentials", {
+        status: 401,
+      });
     }
   }
 
