@@ -46,6 +46,12 @@ export default async function CombustiblesSection() {
               <div className="flex items-center gap-2 mb-1">
                 <img src={LOGOS[key]} className="h-5" />
                 <p className="font-semibold text-blue-700">{e.empresa}</p>
+                {e.manual && (
+                  <span className="ml-1 p-0.5 px-2 flex items-center gap-1 text-[11px] bg-amber-50 text-amber-600 font-medium rounded-md">
+                    <span className="h-2 w-2 rounded-full bg-amber-500" />
+                    Dato Manual
+                  </span>
+                )}
               </div>
 
               <div className="mt-1 text-sm">
@@ -57,7 +63,6 @@ export default async function CombustiblesSection() {
 
               <small className="text-gray-400 text-xs">
                 Actualizado al: {formatFechaHora(e.fechaActualizacion)?.fecha}
-                {e.manual ? " - Manualmente" : ""}
               </small>
             </div>
           );
