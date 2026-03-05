@@ -2,7 +2,10 @@
 
 import { useState, useEffect, useMemo, useCallback } from "react";
 
-// --- UTILIDADES ---
+/* =========================
+   UTILIDADES
+========================= */
+
 function getDiff(original, edited) {
   if (!original || !edited) return {};
   const diff = {};
@@ -21,13 +24,18 @@ function getDiff(original, edited) {
           precio: null,
           fecha: null,
         };
+
         const edit = editedEmpresa[tipo][producto] || {
           precio: null,
           fecha: null,
         };
 
-        if (orig.precio !== edit.precio || orig.fecha !== edit.fecha) {
+        const precioChanged = Number(orig.precio) !== Number(edit.precio);
+        const fechaChanged = orig.fecha !== edit.fecha;
+
+        if (precioChanged || fechaChanged) {
           hasChanges = true;
+
           if (!empresaDiff.from[tipo]) empresaDiff.from[tipo] = {};
           if (!empresaDiff.to[tipo]) empresaDiff.to[tipo] = {};
 
@@ -39,66 +47,142 @@ function getDiff(original, edited) {
 
     if (hasChanges) diff[empresa] = empresaDiff;
   });
+
   return diff;
 }
 
+function validateStructure(data) {
+  if (typeof data !== "object" || data === null) return false;
+
+  return Object.values(data).every((empresa) => {
+    if (typeof empresa !== "object") return false;
+
+    return ["nafta", "gasoil"].every((tipo) => {
+      if (!empresa[tipo]) return true;
+
+      return Object.values(empresa[tipo]).every((producto) => {
+        return (
+          typeof producto === "object" &&
+          "precio" in producto &&
+          "fecha" in producto
+        );
+      });
+    });
+  });
+}
+
+/* =========================
+   COMPONENTE
+========================= */
+
 export default function AdminPage() {
   const [json, setJson] = useState("");
+  const [debouncedJson, setDebouncedJson] = useState("");
   const [status, setStatus] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
   const [passwordInput, setPasswordInput] = useState("");
   const [modalStatus, setModalStatus] = useState("");
   const [originalData, setOriginalData] = useState({});
-  const [isValidJson, setIsValidJson] = useState(true);
 
-  // 1. Carga inicial
+  /* =========================
+     CARGA INICIAL
+  ========================= */
+
   useEffect(() => {
     async function loadData() {
       try {
         const res = await fetch(`/api/admin/combustibles`);
         if (!res.ok) throw new Error();
         const data = await res.json();
+
         setOriginalData(data);
         setJson(JSON.stringify(data, null, 2));
+        setDebouncedJson(JSON.stringify(data, null, 2));
+
         showStatus("✅ Datos sincronizados");
       } catch {
         showStatus("❌ Error al conectar con la API");
       }
     }
+
     loadData();
   }, []);
 
-  // 2. Validación y Diff en tiempo real (Optimizado con useMemo)
-  const { diff, parsedJson } = useMemo(() => {
-    try {
-      const parsed = JSON.parse(json);
-      setIsValidJson(true);
-      return { parsedJson: parsed, diff: getDiff(originalData, parsed) };
-    } catch {
-      setIsValidJson(false);
-      return { parsedJson: null, diff: {} };
-    }
-  }, [json, originalData]);
+  /* =========================
+     DEBOUNCE
+  ========================= */
 
-  // 3. Handlers
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setDebouncedJson(json);
+    }, 300);
+
+    return () => clearTimeout(timeout);
+  }, [json]);
+
+  /* =========================
+     PARSEO
+  ========================= */
+
+  const parsedJson = useMemo(() => {
+    try {
+      return JSON.parse(debouncedJson);
+    } catch {
+      return null;
+    }
+  }, [debouncedJson]);
+
+  const isStructurallyValid = useMemo(() => {
+    if (!parsedJson) return false;
+    return validateStructure(parsedJson);
+  }, [parsedJson]);
+
+  /* =========================
+     DIFF
+  ========================= */
+
+  const diff = useMemo(() => {
+    if (!parsedJson) return {};
+    return getDiff(originalData, parsedJson);
+  }, [parsedJson, originalData]);
+
+  const totalChanges = useMemo(() => {
+    let count = 0;
+    Object.values(diff).forEach((empresa) => {
+      Object.values(empresa.to).forEach((tipo) => {
+        count += Object.keys(tipo).length;
+      });
+    });
+    return count;
+  }, [diff]);
+
+  /* =========================
+     HELPERS
+  ========================= */
+
   const showStatus = (msg) => {
     setStatus(msg);
-    setTimeout(() => setStatus(""), 8000);
+    setTimeout(() => setStatus(""), 6000);
   };
 
   const handleFormat = () => {
-    if (isValidJson) {
+    if (parsedJson) {
       setJson(JSON.stringify(parsedJson, null, 2));
     }
   };
 
   const handleSave = useCallback(() => {
-    if (!isValidJson) return alert("El JSON tiene errores de sintaxis.");
+    if (!parsedJson) return alert("El JSON tiene errores de sintaxis.");
+    if (!isStructurallyValid)
+      return alert("La estructura del JSON es incorrecta.");
     setModalOpen(true);
     setModalStatus("");
-  }, [isValidJson]);
+  }, [parsedJson, isStructurallyValid]);
 
-  // Atajo de teclado Ctrl + S
+  /* =========================
+     CTRL + S
+  ========================= */
+
   useEffect(() => {
     const handleKeyDown = (e) => {
       if ((e.ctrlKey || e.metaKey) && e.key === "s") {
@@ -106,13 +190,20 @@ export default function AdminPage() {
         handleSave();
       }
     };
+
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [handleSave]);
 
+  /* =========================
+     GUARDADO
+  ========================= */
+
   async function confirmSave() {
     if (!passwordInput) return setModalStatus("Escribe la contraseña");
+
     setModalStatus("Enviando...");
+
     try {
       const res = await fetch("/api/admin/combustibles", {
         method: "POST",
@@ -123,7 +214,10 @@ export default function AdminPage() {
       if (res.ok) {
         setModalStatus("✅ ¡Guardado!");
         setOriginalData(parsedJson);
+        setJson(JSON.stringify(parsedJson, null, 2));
+
         showStatus("✅ Cambios aplicados con éxito");
+
         setTimeout(() => {
           setModalOpen(false);
           setPasswordInput("");
@@ -136,8 +230,12 @@ export default function AdminPage() {
     }
   }
 
+  /* =========================
+     RENDER
+  ========================= */
+
   return (
-    <div className="flex flex-col max-w-6xl mx-auto p-4 md:p-8 space-y-6 bg-white min-h-screen">
+    <div className="flex flex-col max-w-6xl mx-auto p-4 md:p-8 space-y-6 bg-white min-h-[calc(100vh-70px)]">
       <header className="flex flex-col md:flex-row justify-between items-center gap-4 border-b pb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-800">
@@ -147,6 +245,7 @@ export default function AdminPage() {
             Modifica los precios manualmente
           </p>
         </div>
+
         <div className="flex gap-2">
           <button
             onClick={handleFormat}
@@ -154,11 +253,12 @@ export default function AdminPage() {
           >
             {"{ }"} Formatear
           </button>
+
           <button
             onClick={handleSave}
-            disabled={!isValidJson}
+            disabled={!parsedJson || !isStructurallyValid}
             className={`px-6 py-2 rounded font-bold text-white shadow-md transition ${
-              isValidJson
+              parsedJson && isStructurallyValid
                 ? "bg-indigo-600 hover:bg-indigo-700"
                 : "bg-gray-300 cursor-not-allowed"
             }`}
@@ -168,23 +268,36 @@ export default function AdminPage() {
         </div>
       </header>
 
-      {/* MAIN GRID con scroll interno en paneles */}
+      {totalChanges > 0 && (
+        <div className="bg-yellow-50 border border-yellow-200 text-yellow-700 text-xs px-3 py-2 rounded">
+          Hay {totalChanges} modificaciones sin guardar
+        </div>
+      )}
+
+      {/* CONTENIDO PRINCIPAL */}
+
       <main className="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-1 min-h-0">
-        {/* Editor JSON */}
+        {/* EDITOR */}
         <div className="lg:col-span-2 space-y-2 flex flex-col min-h-0">
           <div className="flex justify-between items-center">
             <span className="text-xs font-mono uppercase tracking-widest text-gray-400">
               Editor JSON
             </span>
-            {!isValidJson && (
+
+            {!parsedJson ? (
               <span className="text-xs text-red-500 font-bold animate-pulse">
                 JSON INVÁLIDO
               </span>
-            )}
+            ) : !isStructurallyValid ? (
+              <span className="text-xs text-orange-500 font-bold">
+                ESTRUCTURA INCORRECTA
+              </span>
+            ) : null}
           </div>
+
           <div
-            className={`flex-1 relative border-2 rounded-lg overflow-hidden min-h-0 ${
-              isValidJson
+            className={`flex-1 border-2 rounded-lg overflow-hidden min-h-0 ${
+              parsedJson
                 ? "border-gray-200 focus-within:border-indigo-400"
                 : "border-red-400"
             }`}
@@ -198,48 +311,46 @@ export default function AdminPage() {
           </div>
         </div>
 
-        {/* Panel de Cambios Lateral */}
+        {/* PANEL DE CAMBIOS */}
         <aside className="bg-gray-50 rounded-lg border p-4 flex flex-col min-h-0">
           <h2 className="text-sm font-bold text-gray-700 mb-4 border-b pb-2">
-            CAMBIOS DETECTADOS
+            CAMBIOS DETECTADOS ({totalChanges})
           </h2>
-          <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
+
+          <div className="flex-1 overflow-y-auto pr-2">
             {Object.keys(diff).length === 0 ? (
-              <div className="h-full flex flex-col items-center justify-center text-gray-400 opacity-60 italic text-sm text-center">
-                <p>No se detectan diferencias</p>
-                <p className="text-xs mt-1">(Modifica un precio o fecha)</p>
+              <div className="h-full flex items-center justify-center text-gray-400 italic text-sm text-center">
+                No se detectan diferencias
               </div>
             ) : (
               Object.entries(diff).map(([empresa, cambio]) => (
                 <div
                   key={empresa}
-                  className="bg-white p-3 rounded shadow-sm border-l-4 border-indigo-500"
+                  className="bg-white p-3 rounded shadow-sm border-l-4 border-indigo-500 mb-4"
                 >
                   <p className="font-bold text-indigo-900 text-xs mb-2 uppercase">
                     {empresa}
                   </p>
+
                   {Object.entries(cambio.from).map(([tipo, productos]) => (
-                    <div key={tipo} className="mb-2 last:mb-0">
+                    <div key={tipo} className="mb-3">
                       <p className="text-[10px] font-black text-gray-400 uppercase mb-1">
                         {tipo}
                       </p>
+
                       {Object.entries(productos).map(([prod, info]) => (
-                        <div
-                          key={prod}
-                          className="text-[11px] space-y-1 mb-2 border-b border-gray-50 pb-1 last:border-0"
-                        >
+                        <div key={prod} className="text-[11px] mb-2">
                           <span className="font-bold text-gray-700">
                             {prod}
                           </span>
-                          <div className="flex items-center gap-1 text-red-500 line-through decoration-red-300">
-                            {info.precio}{" "}
-                            <span className="text-[9px]">({info.fecha})</span>
+
+                          <div className="text-red-500 line-through">
+                            {info.precio} ({info.fecha})
                           </div>
-                          <div className="flex items-center gap-1 text-green-600 font-bold">
-                            {cambio.to[tipo][prod].precio}{" "}
-                            <span className="text-[9px]">
-                              ({cambio.to[tipo][prod].fecha})
-                            </span>
+
+                          <div className="text-green-600 font-bold">
+                            {cambio.to[tipo][prod].precio} (
+                            {cambio.to[tipo][prod].fecha})
                           </div>
                         </div>
                       ))}
@@ -251,22 +362,6 @@ export default function AdminPage() {
           </div>
         </aside>
       </main>
-
-      {/* Status Flotante */}
-      {status && (
-        <div className="fixed bottom-6 left-6 animate-bounce">
-          <div
-            className={`px-4 py-2 rounded-full shadow-lg text-sm font-bold ${
-              status.includes("❌")
-                ? "bg-red-600 text-white"
-                : "bg-green-600 text-white"
-            }`}
-          >
-            {status}
-          </div>
-        </div>
-      )}
-
       {/* Modal */}
       {modalOpen && (
         <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
@@ -329,6 +424,297 @@ export default function AdminPage() {
     </div>
   );
 }
+// -------------------------------------------------------------------------
+
+// "use client";
+
+// import { useState, useEffect, useMemo, useCallback } from "react";
+
+// // --- UTILIDADES ---
+// function getDiff(original, edited) {
+//   if (!original || !edited) return {};
+//   const diff = {};
+
+//   Object.keys(edited).forEach((empresa) => {
+//     const origEmpresa = original[empresa] || {};
+//     const editedEmpresa = edited[empresa];
+//     const empresaDiff = { from: {}, to: {} };
+//     let hasChanges = false;
+
+//     ["nafta", "gasoil"].forEach((tipo) => {
+//       if (!editedEmpresa[tipo]) return;
+
+//       Object.keys(editedEmpresa[tipo]).forEach((producto) => {
+//         const orig = origEmpresa[tipo]?.[producto] || {
+//           precio: null,
+//           fecha: null,
+//         };
+//         const edit = editedEmpresa[tipo][producto] || {
+//           precio: null,
+//           fecha: null,
+//         };
+
+//         const precioChanged = Number(orig.precio) !== Number(edit.precio);
+//         const fechaChanged = orig.fecha !== edit.fecha;
+
+//         if (precioChanged || fechaChanged) {
+//           hasChanges = true;
+
+//           if (!empresaDiff.from[tipo]) empresaDiff.from[tipo] = {};
+//           if (!empresaDiff.to[tipo]) empresaDiff.to[tipo] = {};
+
+//           empresaDiff.from[tipo][producto] = orig;
+//           empresaDiff.to[tipo][producto] = edit;
+//         }
+//       });
+//     });
+
+//     if (hasChanges) diff[empresa] = empresaDiff;
+//   });
+
+//   return diff;
+// }
+
+// export default function AdminPage() {
+//   const [json, setJson] = useState("");
+//   const [status, setStatus] = useState("");
+//   const [modalOpen, setModalOpen] = useState(false);
+//   const [passwordInput, setPasswordInput] = useState("");
+//   const [modalStatus, setModalStatus] = useState("");
+//   const [originalData, setOriginalData] = useState({});
+//   const [isValidJson, setIsValidJson] = useState(true);
+
+//   // 1️⃣ Carga inicial
+//   useEffect(() => {
+//     async function loadData() {
+//       try {
+//         const res = await fetch(`/api/admin/combustibles`);
+//         if (!res.ok) throw new Error();
+//         const data = await res.json();
+//         setOriginalData(data);
+//         setJson(JSON.stringify(data, null, 2));
+//         showStatus("✅ Datos sincronizados");
+//       } catch {
+//         showStatus("❌ Error al conectar con la API");
+//       }
+//     }
+//     loadData();
+//   }, []);
+
+//   // 2️⃣ Parse seguro sin efectos secundarios
+//   const parsedJson = useMemo(() => {
+//     try {
+//       return JSON.parse(json);
+//     } catch {
+//       return null;
+//     }
+//   }, [json]);
+
+//   useEffect(() => {
+//     setIsValidJson(!!parsedJson);
+//   }, [parsedJson]);
+
+//   // 3️⃣ Diff memoizado limpio
+//   const diff = useMemo(() => {
+//     if (!parsedJson) return {};
+//     return getDiff(originalData, parsedJson);
+//   }, [parsedJson, originalData]);
+
+//   // 4️⃣ Conteo real de modificaciones
+//   const totalChanges = useMemo(() => {
+//     let count = 0;
+//     Object.values(diff).forEach((empresa) => {
+//       Object.values(empresa.to).forEach((tipo) => {
+//         count += Object.keys(tipo).length;
+//       });
+//     });
+//     return count;
+//   }, [diff]);
+
+//   // 5️⃣ Status helper
+//   const showStatus = (msg) => {
+//     setStatus(msg);
+//     setTimeout(() => setStatus(""), 8000);
+//   };
+
+//   const handleFormat = () => {
+//     if (parsedJson) {
+//       setJson(JSON.stringify(parsedJson, null, 2));
+//     }
+//   };
+
+//   const handleSave = useCallback(() => {
+//     if (!parsedJson) return alert("El JSON tiene errores de sintaxis.");
+//     setModalOpen(true);
+//     setModalStatus("");
+//   }, [parsedJson]);
+
+//   // Ctrl + S
+//   useEffect(() => {
+//     const handleKeyDown = (e) => {
+//       if ((e.ctrlKey || e.metaKey) && e.key === "s") {
+//         e.preventDefault();
+//         handleSave();
+//       }
+//     };
+//     window.addEventListener("keydown", handleKeyDown);
+//     return () => window.removeEventListener("keydown", handleKeyDown);
+//   }, [handleSave]);
+
+//   async function confirmSave() {
+//     if (!passwordInput) return setModalStatus("Escribe la contraseña");
+
+//     setModalStatus("Enviando...");
+
+//     try {
+//       const res = await fetch("/api/admin/combustibles", {
+//         method: "POST",
+//         headers: { "Content-Type": "application/json" },
+//         body: JSON.stringify({
+//           password: passwordInput,
+//           data: parsedJson,
+//         }),
+//       });
+
+//       if (res.ok) {
+//         setModalStatus("✅ ¡Guardado!");
+//         setOriginalData(parsedJson);
+//         setJson(JSON.stringify(parsedJson, null, 2));
+//         showStatus("✅ Cambios aplicados con éxito");
+
+//         setTimeout(() => {
+//           setModalOpen(false);
+//           setPasswordInput("");
+//         }, 1000);
+//       } else {
+//         setModalStatus("❌ Password incorrecta");
+//       }
+//     } catch {
+//       setModalStatus("❌ Error de red");
+//     }
+//   }
+
+//   return (
+//     <div className="flex flex-col max-w-6xl mx-auto p-4 md:p-8 space-y-6 bg-white min-h-[calc(100vh-70px)]">
+//       <header className="flex flex-col md:flex-row justify-between items-center gap-4 border-b pb-6">
+//         <div>
+//           <h1 className="text-2xl font-bold text-gray-800">
+//             Panel de Overrides
+//           </h1>
+//           <p className="text-sm text-gray-500">
+//             Modifica los precios manualmente
+//           </p>
+//         </div>
+//         <div className="flex gap-2">
+//           <button
+//             onClick={handleFormat}
+//             className="px-4 py-2 text-sm font-medium text-gray-600 bg-gray-100 rounded hover:bg-gray-200 transition"
+//           >
+//             {"{ }"} Formatear
+//           </button>
+//           <button
+//             onClick={handleSave}
+//             disabled={!parsedJson}
+//             className={`px-6 py-2 rounded font-bold text-white shadow-md transition ${
+//               parsedJson
+//                 ? "bg-indigo-600 hover:bg-indigo-700"
+//                 : "bg-gray-300 cursor-not-allowed"
+//             }`}
+//           >
+//             Guardar
+//           </button>
+//         </div>
+//       </header>
+
+//       <main className="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-1 min-h-0">
+//         <div className="lg:col-span-2 space-y-2 flex flex-col min-h-0">
+//           <div className="flex justify-between items-center">
+//             <span className="text-xs font-mono uppercase tracking-widest text-gray-400">
+//               Editor JSON
+//             </span>
+//             {!parsedJson && (
+//               <span className="text-xs text-red-500 font-bold animate-pulse">
+//                 JSON INVÁLIDO
+//               </span>
+//             )}
+//           </div>
+
+//           <div
+//             className={`flex-1 relative border-2 rounded-lg overflow-hidden min-h-0 ${
+//               parsedJson
+//                 ? "border-gray-200 focus-within:border-indigo-400"
+//                 : "border-red-400"
+//             }`}
+//           >
+//             <textarea
+//               className="w-full h-full p-4 font-mono text-sm resize-none focus:outline-none bg-gray-50 text-gray-800"
+//               value={json}
+//               onChange={(e) => setJson(e.target.value)}
+//               spellCheck={false}
+//             />
+//           </div>
+//         </div>
+//         <aside className="bg-gray-50 rounded-lg border p-4 flex flex-col min-h-0">
+//           <h2 className="text-sm font-bold text-gray-700 mb-4 border-b pb-2">
+//             CAMBIOS DETECTADOS ({totalChanges})
+//           </h2>
+
+//           <div className="flex-1 overflow-y-auto pr-2">
+//             {Object.keys(diff).length === 0 ? (
+//               <div className="h-full flex flex-col items-center justify-center text-gray-400 opacity-60 italic text-sm text-center">
+//                 <p>No se detectan diferencias</p>
+//                 <p className="text-xs mt-1">(Modifica un precio o fecha)</p>
+//               </div>
+//             ) : (
+//               Object.entries(diff).map(([empresa, cambio]) => (
+//                 <div
+//                   key={empresa}
+//                   className="bg-white p-3 rounded shadow-sm border-l-4 border-indigo-500 mb-4"
+//                 >
+//                   <p className="font-bold text-indigo-900 text-xs mb-2 uppercase">
+//                     {empresa}
+//                   </p>
+
+//                   {Object.entries(cambio.from).map(([tipo, productos]) => (
+//                     <div key={tipo} className="mb-3 last:mb-0">
+//                       <p className="text-[10px] font-black text-gray-400 uppercase mb-1">
+//                         {tipo}
+//                       </p>
+
+//                       {Object.entries(productos).map(([prod, info]) => (
+//                         <div
+//                           key={prod}
+//                           className="text-[11px] space-y-1 mb-2 border-b border-gray-50 pb-1 last:border-0"
+//                         >
+//                           <span className="font-bold text-gray-700">
+//                             {prod}
+//                           </span>
+
+//                           <div className="flex items-center gap-1 text-red-500 line-through decoration-red-300">
+//                             {info.precio}
+//                             <span className="text-[9px]">({info.fecha})</span>
+//                           </div>
+
+//                           <div className="flex items-center gap-1 text-green-600 font-bold">
+//                             {cambio.to[tipo][prod].precio}
+//                             <span className="text-[9px]">
+//                               ({cambio.to[tipo][prod].fecha})
+//                             </span>
+//                           </div>
+//                         </div>
+//                       ))}
+//                     </div>
+//                   ))}
+//                 </div>
+//               ))
+//             )}
+//           </div>
+//         </aside>
+//       </main>
+//     </div>
+//   );
+// }
+
 //---------------------------------------------------------
 
 // "use client";
