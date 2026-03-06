@@ -48,7 +48,7 @@ export default async function CombustiblesSection() {
                 <p className="font-semibold text-blue-700">{e.empresa}</p>
                 {e.manual && (
                   <span className="ml-1 p-0.5 px-2 flex items-center gap-1 text-[11px] bg-amber-50 text-amber-600 font-medium rounded-md">
-                    <span className="h-2 w-2 rounded-full bg-amber-500" />
+                    <span className="h-1.5 w-1.5 mr-1 rounded-full bg-amber-500" />
                     Dato Manual
                   </span>
                 )}
