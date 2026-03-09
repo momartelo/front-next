@@ -9,9 +9,7 @@ const LOGOS = {
   puma: "/logos/puma.png",
 };
 
-export default async function CombustiblesSection() {
-  const combustibles = await getCombustiblesMarDelPlata();
-
+export default function CombustiblesSection({ combustibles }) {
   if (!combustibles) {
     return (
       <Card

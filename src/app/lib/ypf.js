@@ -1,7 +1,5 @@
-// import fs from "fs";
-// import path from "path";
-
 import { kv } from "@vercel/kv";
+import { cache } from "react";
 
 const DATASET_URL =
   'http://datos.energia.gob.ar/api/3/action/datastore_search?resource_id=80ac25de-a44a-4445-9215-090cf55cfda5&filters={"localidad":"MAR DEL PLATA"}';
@@ -169,7 +167,7 @@ function aplicarOverrideHibrido(oficial, manual) {
 }
 
 // Función principal
-export async function getCombustiblesMarDelPlata() {
+export const getCombustiblesMarDelPlata = cache(async () => {
   try {
     const url = `${DATASET_URL}&limit=1000`;
 
@@ -194,6 +192,7 @@ export async function getCombustiblesMarDelPlata() {
     }
 
     const json = await res.json();
+
     const records = json?.result?.records || [];
 
     let ypf = buildEmpresa(records, "ypf", "YPF");
@@ -243,7 +242,7 @@ export async function getCombustiblesMarDelPlata() {
     console.error("Error en Combustibles:", error);
     return null;
   }
-}
+});
 
 // ----------------------------------------------------------------------------------------------------------------------
 

@@ -46,7 +46,7 @@ export default async function Dashboard() {
           </Suspense>
 
           <Suspense fallback={<CardSkeleton title="Combustibles" />}>
-            <CombustiblesSection />
+            <CombustiblesSection combustibles={combustibles} />
           </Suspense>
         </div>
 
