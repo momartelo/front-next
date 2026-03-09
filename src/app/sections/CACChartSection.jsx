@@ -7,7 +7,7 @@ export default async function CACSChartSection() {
 
   return (
     <section className="mt-4">
-      <Card title="Evolución CAC" padding={8}>
+      <Card title="Evolución CAC" padding={"8px 24px 8px 0px"}>
         <CACChart data={historico.slice(-12)} />
       </Card>
     </section>
