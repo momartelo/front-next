@@ -1,267 +1,363 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 
 export default function CombustiblesClient({ data }) {
+  const [selectedProvincia, setSelectedProvincia] = useState("");
   const [selectedLocalidades, setSelectedLocalidades] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [soloActualizados, setSoloActualizados] = useState(true);
 
-  if (!data)
-    return <p className="p-10 text-center">No hay datos disponibles.</p>;
+  // 1. Extraer provincias únicas de los datos
+  const provincias = useMemo(() => {
+    if (!data) return [];
+    const setP = new Set();
+    Object.values(data).forEach((loc) => {
+      const empresas = Object.values(loc);
+      if (empresas[0]?.provincia) setP.add(empresas[0].provincia);
+    });
+    return Array.from(setP).sort();
+  }, [data]);
 
-  const todasLasLocalidades = Object.keys(data).sort();
+  // 2. Filtrar localidades por provincia
+  const localidadesDeProvincia = useMemo(() => {
+    if (!selectedProvincia) return [];
+    return Object.keys(data)
+      .filter((name) => {
+        const emps = Object.values(data[name]);
+        return emps[0]?.provincia === selectedProvincia;
+      })
+      .sort();
+  }, [data, selectedProvincia]);
 
-  // Extraemos todas las empresas únicas (Shell, YPF, etc.)
-  const todasLasEmpresas = Array.from(
-    new Set(Object.values(data).flatMap((loc) => Object.keys(loc))),
-  ).sort();
-
-  const localidadesFiltradas = todasLasLocalidades.filter((loc) =>
-    loc.toLowerCase().includes(searchTerm.toLowerCase()),
+  const localidadesFiltradas = localidadesDeProvincia.filter((l) =>
+    l.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
-  // Esta función ahora sirve tanto para el panel lateral como para las "X"
-  const toggleLocalidad = (loc) => {
-    if (selectedLocalidades.includes(loc)) {
-      setSelectedLocalidades(
-        selectedLocalidades.filter((item) => item !== loc),
-      );
-    } else if (selectedLocalidades.length < 3) {
-      setSelectedLocalidades([...selectedLocalidades, loc]);
-      setSearchTerm("");
-    } else {
-      alert("Máximo 3 localidades para comparar.");
+  // Lógica de cambio de provincia (Arregla el bug de CABA y persistencia)
+  const handleProvinciaChange = (prov) => {
+    setSelectedProvincia(prov);
+    setSearchTerm("");
+
+    if (!prov) return;
+
+    // Buscamos si la provincia elegida tiene una sola ciudad (Caso CABA)
+    const ciudadesDeProv = Object.keys(data).filter((name) => {
+      const emps = Object.values(data[name]);
+      return emps[0]?.provincia === prov;
+    });
+
+    // Si es provincia de una sola ciudad (como CABA), la agregamos automáticamente
+    if (ciudadesDeProv.length === 1) {
+      const nuevaLoc = ciudadesDeProv[0];
+      setSelectedLocalidades((prev) => {
+        if (prev.includes(nuevaLoc)) return prev; // Ya está seleccionada
+        if (prev.length < 3) return [...prev, nuevaLoc]; // Agregamos si hay cupo
+        return prev;
+      });
     }
   };
 
+  const toggleLocalidad = (loc) => {
+    if (selectedLocalidades.includes(loc)) {
+      setSelectedLocalidades(selectedLocalidades.filter((i) => i !== loc));
+    } else if (selectedLocalidades.length < 3) {
+      setSelectedLocalidades([...selectedLocalidades, loc]);
+    }
+  };
+
+  if (!data)
+    return (
+      <div className="p-20 text-center uppercase font-black">
+        Cargando base de datos...
+      </div>
+    );
+
   return (
-    <main className="p-4 md:p-8 max-w-7xl mx-auto bg-slate-50 min-h-screen font-sans text-slate-900">
-      <header className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div className="max-w-7xl mx-auto p-4 md:p-8 min-h-screen bg-slate-50">
+      <header className="mb-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-4xl font-black tracking-tight text-slate-800">
-            Comparador de Precios
+          <h1 className="text-3xl font-black text-slate-800 tracking-tighter">
+            SURTIDORES <span className="text-blue-600">ARGENTINA</span>
           </h1>
-          <p className="text-slate-500 mt-1">
-            Selecciona hasta 3 ciudades para cruzar datos por bandera.
+          <p className="text-slate-500 text-sm font-medium">
+            Precios oficiales del Ministerio de Energía
           </p>
         </div>
 
-        {/* Chips de ciudades seleccionadas (con X para quitar) */}
         <div className="flex flex-wrap gap-2">
-          {selectedLocalidades.map((loc) => (
-            <button
-              key={loc}
-              onClick={() => toggleLocalidad(loc)}
-              className="group bg-blue-600 hover:bg-red-600 text-white px-4 py-2 rounded-full text-sm font-bold transition-all flex items-center gap-2 shadow-sm"
+          {selectedLocalidades.map((l) => (
+            <span
+              key={l}
+              className="bg-slate-800 text-white px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-2 shadow-sm"
             >
-              {loc}
-              <span className="bg-blue-500 group-hover:bg-red-500 rounded-full w-4 h-4 flex items-center justify-center text-[10px]">
+              {l}{" "}
+              <button
+                onClick={() => toggleLocalidad(l)}
+                className="hover:text-red-400"
+              >
                 ✕
-              </span>
-            </button>
+              </button>
+            </span>
           ))}
         </div>
       </header>
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        {/* PANEL LATERAL */}
-        <aside className="lg:col-span-1 bg-white p-5 rounded-2xl shadow-sm border border-slate-200 h-fit sticky top-4">
-          <h2 className="font-bold mb-4 text-slate-700 uppercase text-xs tracking-widest">
-            Localidades
-          </h2>
-          <input
-            type="text"
-            placeholder="Buscar..."
-            className="w-full p-3 bg-slate-100 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none mb-4 transition-all text-sm"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-          <div className="max-h-80 overflow-y-auto space-y-1 pr-2 custom-scrollbar">
-            {localidadesFiltradas.map((loc) => {
-              const estaSeleccionado = selectedLocalidades.includes(loc);
-              return (
-                <button
-                  key={loc}
-                  onClick={() => toggleLocalidad(loc)}
-                  className={`w-full text-left px-4 py-2 rounded-lg text-sm transition-all ${
-                    estaSeleccionado
-                      ? "bg-blue-50 text-blue-700 font-bold border border-blue-100"
-                      : "hover:bg-slate-100 text-slate-600"
-                  }`}
-                >
-                  {estaSeleccionado ? "● " : "+ "} {loc}
-                </button>
-              );
-            })}
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+        <aside className="space-y-4">
+          <div className="bg-white p-6 rounded-4xl border border-slate-200 shadow-sm sticky top-6">
+            <div className="mb-6 pb-6 border-b border-slate-100">
+              <label className="flex items-center cursor-pointer gap-3">
+                <div className="relative">
+                  <input
+                    type="checkbox"
+                    className="sr-only"
+                    checked={soloActualizados}
+                    onChange={() => setSoloActualizados(!soloActualizados)}
+                  />
+                  <div
+                    className={`block w-10 h-6 rounded-full transition-colors ${soloActualizados ? "bg-blue-600" : "bg-slate-300"}`}
+                  ></div>
+                  <div
+                    className={`absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform ${soloActualizados ? "translate-x-4" : ""}`}
+                  ></div>
+                </div>
+                <span className="text-xs font-black text-slate-700 uppercase tracking-tighter">
+                  Solo precios recientes
+                </span>
+              </label>
+              <p className="text-[10px] text-slate-400 mt-2 leading-tight">
+                Oculta surtidores que no actualizaron en los últimos 60 días.
+              </p>
+            </div>
+
+            <label className="text-[10px] font-bold text-slate-400 uppercase block mb-2">
+              1. Provincia
+            </label>
+            <select
+              className="w-full p-3 bg-slate-50 border-2 border-slate-100 rounded-xl mb-6 font-bold text-slate-700 outline-none focus:border-blue-500 transition-all"
+              value={selectedProvincia}
+              onChange={(e) => handleProvinciaChange(e.target.value)}
+            >
+              <option value="">Seleccionar...</option>
+              {provincias.map((p) => (
+                <option key={p} value={p}>
+                  {p}
+                </option>
+              ))}
+            </select>
+
+            {selectedProvincia && (
+              <div className="animate-in fade-in slide-in-from-top-2 duration-300">
+                <label className="text-[10px] font-bold text-slate-400 uppercase block mb-2">
+                  2. Ciudad
+                </label>
+                <input
+                  type="text"
+                  placeholder="Escribe para buscar..."
+                  className="w-full p-3 bg-slate-50 border-2 border-slate-100 rounded-xl mb-4 text-sm outline-none focus:border-blue-500"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+                <div className="max-h-60 overflow-y-auto space-y-1 pr-2 custom-scrollbar">
+                  {localidadesFiltradas.map((l) => (
+                    <button
+                      key={l}
+                      onClick={() => toggleLocalidad(l)}
+                      className={`w-full text-left px-4 py-2.5 rounded-xl text-xs transition-all ${selectedLocalidades.includes(l) ? "bg-blue-600 text-white font-bold shadow-md" : "hover:bg-slate-100 text-slate-600"}`}
+                    >
+                      {l}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </aside>
 
-        {/* COMPARATIVA POR EMPRESA */}
-        <div className="lg:col-span-3 space-y-10">
+        <section className="lg:col-span-3">
           {selectedLocalidades.length > 0 ? (
-            todasLasEmpresas.map((empresaNombre) => (
-              <section
-                key={empresaNombre}
-                className="bg-white rounded-3xl shadow-md border border-slate-200 overflow-hidden"
-              >
-                <div className="bg-slate-900 p-4">
-                  <h3 className="text-white font-black uppercase tracking-widest flex items-center gap-2">
-                    <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
-                    {empresaNombre}
-                  </h3>
-                </div>
-
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="bg-slate-50 border-b border-slate-100">
-                        <th className="p-4 text-xs font-bold text-slate-400 uppercase w-1/4">
-                          Combustible
-                        </th>
-                        {selectedLocalidades.map((loc) => (
-                          <th
-                            key={loc}
-                            className="p-4 text-sm font-bold text-slate-700 border-l border-slate-100 text-center relative group"
-                          >
-                            {loc}
-                            {/* Botón X flotante en el encabezado de la tabla */}
-                            <button
-                              onClick={() => toggleLocalidad(loc)}
-                              className="absolute -top-1 -right-1 bg-red-500 text-white w-5 h-5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-lg flex items-center justify-center text-[10px]"
-                              title="Quitar ciudad"
-                            >
-                              ✕
-                            </button>
-                          </th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-50">
-                      <FilaProducto
-                        etiqueta="Nafta Super"
-                        campo="super"
-                        sub="nafta"
-                        empresa={empresaNombre}
-                        localidades={selectedLocalidades}
-                        data={data}
-                      />
-                      <FilaProducto
-                        etiqueta="Nafta Premium"
-                        campo="premium"
-                        sub="nafta"
-                        empresa={empresaNombre}
-                        localidades={selectedLocalidades}
-                        data={data}
-                      />
-                      <FilaProducto
-                        etiqueta="Gasoil Común"
-                        campo="comun"
-                        sub="gasoil"
-                        empresa={empresaNombre}
-                        localidades={selectedLocalidades}
-                        data={data}
-                      />
-                      <FilaProducto
-                        etiqueta="Gasoil Premium"
-                        campo="premium"
-                        sub="gasoil"
-                        empresa={empresaNombre}
-                        localidades={selectedLocalidades}
-                        data={data}
-                      />
-
-                      {/* FILA DE ACTUALIZACIÓN CON ESTILO DE ALERTAS */}
-                      <tr className="bg-slate-50/50">
-                        <td className="p-4 text-[10px] font-bold text-slate-400 uppercase italic">
-                          Fecha de Ref.
-                        </td>
-                        {selectedLocalidades.map((loc) => {
-                          const fecha =
-                            data[loc][empresaNombre]?.fechaActualizacion;
-                          const esViejo = esFechaVieja(fecha);
-                          return (
-                            <td
-                              key={loc}
-                              className={`p-4 text-center border-l border-slate-100 ${esViejo ? "bg-red-50" : ""}`}
-                            >
-                              <span
-                                className={`text-[10px] font-bold ${esViejo ? "text-red-500" : "text-slate-500"}`}
-                              >
-                                {fecha || "---"}
-                                {esViejo && " ⚠️"}
-                              </span>
-                            </td>
-                          );
-                        })}
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </section>
-            ))
+            <Tablas
+              data={data}
+              locs={selectedLocalidades}
+              soloActualizados={soloActualizados}
+            />
           ) : (
-            <div className="h-80 flex flex-col items-center justify-center border-4 border-dashed border-slate-200 rounded-[40px] bg-white text-slate-400 transition-all">
-              <div className="bg-slate-100 p-6 rounded-full mb-4 text-4xl">
-                📊
+            <div className="relative overflow-hidden bg-white border border-slate-200 rounded-[48px] p-8 md:p-16 shadow-sm">
+              <div className="absolute -top-24 -right-24 w-64 h-64 bg-blue-50 rounded-full opacity-50"></div>
+              <div className="absolute -bottom-12 -left-12 w-48 h-48 bg-slate-50 rounded-full opacity-80"></div>
+
+              <div className="relative z-10 flex flex-col items-center text-center max-w-md mx-auto">
+                <div className="w-20 h-20 bg-blue-600 rounded-3xl flex items-center justify-center shadow-xl shadow-blue-200 rotate-3 mb-8">
+                  <span className="text-4xl text-white">⛽</span>
+                </div>
+
+                <h2 className="text-3xl font-black text-slate-800 tracking-tighter mb-4">
+                  Comparador de{" "}
+                  <span className="text-blue-600">Combustibles</span>
+                </h2>
+
+                <p className="text-slate-500 font-medium leading-relaxed mb-10">
+                  Analiza y compara los precios actualizados de estaciones de
+                  servicio en todo el país. Selecciona una provincia para
+                  comenzar.
+                </p>
+
+                <div className="grid grid-cols-1 gap-4 w-full">
+                  <div className="flex items-center gap-4 bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                    <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center text-xs font-black shadow-sm text-blue-600">
+                      1
+                    </div>
+                    <p className="text-sm font-bold text-slate-600">
+                      Elige una Provincia en el panel lateral
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-4 bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                    <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center text-xs font-black shadow-sm text-blue-600">
+                      2
+                    </div>
+                    <p className="text-sm font-bold text-slate-600">
+                      Suma hasta 3 ciudades para comparar
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-4 bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                    <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center text-xs font-black shadow-sm text-blue-600">
+                      3
+                    </div>
+                    <p className="text-sm font-bold text-slate-600">
+                      Activa el filtro de recencia para mayor precisión
+                    </p>
+                  </div>
+                </div>
               </div>
-              <p className="text-xl font-semibold">
-                Selecciona localidades para comparar
-              </p>
-              <p className="text-sm">
-                Puedes elegir hasta 3 ciudades del panel izquierdo.
-              </p>
             </div>
           )}
-        </div>
+        </section>
       </div>
-    </main>
+    </div>
   );
 }
 
-// Lógica de fecha (30 días de antigüedad)
-function esFechaVieja(fechaStr) {
-  if (!fechaStr) return false;
-  try {
-    const [dia, mes, anio] = fechaStr.split("/");
-    const fechaActualizacion = new Date(anio, mes - 1, dia);
-    const hoy = new Date();
-    const diferenciaDias = (hoy - fechaActualizacion) / (1000 * 60 * 60 * 24);
-    return diferenciaDias > 30;
-  } catch {
-    return false;
-  }
+function Tablas({ data, locs, soloActualizados }) {
+  const empresas = Array.from(
+    new Set(locs.flatMap((l) => Object.keys(data[l]))),
+  ).sort();
+
+  return empresas.map((emp) => (
+    <div
+      key={emp}
+      className="bg-white rounded-4xl border border-slate-200 shadow-sm overflow-hidden mb-8"
+    >
+      <div className="bg-slate-900 p-5 text-white flex justify-between items-center">
+        <h3 className="text-sm font-black tracking-widest uppercase">{emp}</h3>
+      </div>
+      <div className="overflow-x-auto">
+        <table className="w-full border-collapse">
+          <thead>
+            <tr className="bg-slate-50 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">
+              <th className="p-5 text-left pl-8">Producto</th>
+              {locs.map((l) => (
+                <th
+                  key={l}
+                  className="p-5 border-l border-slate-100 text-center"
+                >
+                  {l}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-50">
+            <Fila
+              data={data}
+              locs={locs}
+              emp={emp}
+              label="Nafta Súper"
+              path={["nafta", "super"]}
+              soloActualizados={soloActualizados}
+            />
+            <Fila
+              data={data}
+              locs={locs}
+              emp={emp}
+              label="Nafta Premium"
+              path={["nafta", "premium"]}
+              soloActualizados={soloActualizados}
+            />
+            <Fila
+              data={data}
+              locs={locs}
+              emp={emp}
+              label="Gasoil G2"
+              path={["gasoil", "comun"]}
+              soloActualizados={soloActualizados}
+            />
+            <Fila
+              data={data}
+              locs={locs}
+              emp={emp}
+              label="Gasoil G3"
+              path={["gasoil", "premium"]}
+              soloActualizados={soloActualizados}
+            />
+          </tbody>
+        </table>
+      </div>
+    </div>
+  ));
 }
 
-function FilaProducto({ etiqueta, campo, sub, empresa, localidades, data }) {
-  // Encontrar el precio más bajo de la fila para resaltarlo
-  const precios = localidades
-    .map((loc) => parseFloat(data[loc][empresa]?.[sub]?.[campo]))
-    .filter((p) => !isNaN(p));
-  const minPrecio = precios.length > 0 ? Math.min(...precios) : null;
+function Fila({ data, locs, emp, label, path, soloActualizados }) {
+  const LIMITE_DIAS = 60;
+
+  const getRecencia = (fecha) => {
+    if (!fecha) return { dias: 999, esViejo: true };
+    const dias = Math.floor(
+      (new Date() - new Date(fecha)) / (1000 * 60 * 60 * 24),
+    );
+    return { dias, esViejo: dias > LIMITE_DIAS };
+  };
 
   return (
     <tr className="hover:bg-blue-50/30 transition-colors">
-      <td className="p-4 text-sm font-semibold text-slate-600">{etiqueta}</td>
-      {localidades.map((loc) => {
-        const precioRaw = data[loc][empresa]?.[sub]?.[campo];
-        const precioNum = parseFloat(precioRaw);
-        const esMasBarato =
-          minPrecio && precioNum === minPrecio && localidades.length > 1;
+      <td className="p-5 text-sm font-bold text-slate-700 pl-8">{label}</td>
+      {locs.map((l) => {
+        const item = data[l][emp];
+        const precio = item?.[path[0]]?.[path[1]];
+        const { dias, esViejo } = getRecencia(item?.fechaActualizacion);
+
+        if (soloActualizados && esViejo && precio) {
+          return (
+            <td key={l} className="p-5 border-l border-slate-100 text-center">
+              <span className="text-[10px] font-bold text-slate-300 italic uppercase">
+                Sin datos recientes
+              </span>
+            </td>
+          );
+        }
 
         return (
-          <td
-            key={loc}
-            className={`p-4 text-center border-l border-slate-100 ${esMasBarato ? "bg-green-50/50" : ""}`}
-          >
-            <span
-              className={`font-mono text-base font-bold ${esMasBarato ? "text-green-600" : precioRaw ? "text-slate-800" : "text-slate-200"}`}
-            >
-              {precioRaw ? `$${precioRaw}` : "---"}
-            </span>
-            {esMasBarato && (
-              <div className="text-[8px] text-green-500 font-bold uppercase mt-1">
-                Mejor Precio
+          <td key={l} className="p-5 border-l border-slate-100 text-center">
+            {precio ? (
+              <div className="flex flex-col items-center gap-0.5">
+                <span
+                  className={`text-xl font-black tracking-tight ${esViejo ? "text-slate-300" : "text-blue-700"}`}
+                >
+                  ${precio}
+                </span>
+                {esViejo ? (
+                  <span className="text-[8px] bg-amber-100 text-amber-600 px-2 py-0.5 rounded-full font-black uppercase">
+                    Hace {dias} días
+                  </span>
+                ) : (
+                  <span className="text-[9px] text-slate-400 font-medium">
+                    Actualizado: {item.fechaActualizacion}
+                  </span>
+                )}
               </div>
+            ) : (
+              <span className="text-slate-200">---</span>
             )}
           </td>
         );
@@ -269,7 +365,6 @@ function FilaProducto({ etiqueta, campo, sub, empresa, localidades, data }) {
     </tr>
   );
 }
-
 //------------------------------------------------------------------------------
 // "use client";
 
