@@ -34,25 +34,21 @@ export default function CombustiblesClient({ data }) {
     l.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
-  // Lógica de cambio de provincia (Arregla el bug de CABA y persistencia)
   const handleProvinciaChange = (prov) => {
     setSelectedProvincia(prov);
     setSearchTerm("");
-
     if (!prov) return;
 
-    // Buscamos si la provincia elegida tiene una sola ciudad (Caso CABA)
     const ciudadesDeProv = Object.keys(data).filter((name) => {
       const emps = Object.values(data[name]);
       return emps[0]?.provincia === prov;
     });
 
-    // Si es provincia de una sola ciudad (como CABA), la agregamos automáticamente
     if (ciudadesDeProv.length === 1) {
       const nuevaLoc = ciudadesDeProv[0];
       setSelectedLocalidades((prev) => {
-        if (prev.includes(nuevaLoc)) return prev; // Ya está seleccionada
-        if (prev.length < 3) return [...prev, nuevaLoc]; // Agregamos si hay cupo
+        if (prev.includes(nuevaLoc)) return prev;
+        if (prev.length < 3) return [...prev, nuevaLoc];
         return prev;
       });
     }
@@ -68,33 +64,35 @@ export default function CombustiblesClient({ data }) {
 
   if (!data)
     return (
-      <div className="p-20 text-center uppercase font-black">
+      <div className="p-10 text-center uppercase font-black text-slate-400">
         Cargando base de datos...
       </div>
     );
 
   return (
-    <div className="max-w-7xl mx-auto p-4 md:p-8 min-h-screen bg-slate-50">
-      <header className="mb-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div className="max-w-7xl mx-auto p-4  bg-slate-50 dark:bg-black flex flex-col ">
+      {/* HEADER MÁS COMPACTO */}
+      <header className="mb-4 flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-200 pb-4 shrink-0">
         <div>
-          <h1 className="text-3xl font-black text-slate-800 tracking-tighter">
-            SURTIDORES <span className="text-blue-600">ARGENTINA</span>
+          <h1 className="text-xl font-black text-slate-800 dark:text-slate-300 tracking-tighter">
+            SURTIDORES{" "}
+            <span className="text-blue-600 dark:text-blue-400">ARGENTINA</span>
           </h1>
-          <p className="text-slate-500 text-sm font-medium">
+          <p className="text-slate-500 text-[11px] dark:text-slate-200 font-medium">
             Precios oficiales del Ministerio de Energía
           </p>
         </div>
 
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-1.5">
           {selectedLocalidades.map((l) => (
             <span
               key={l}
-              className="bg-slate-800 text-white px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-2 shadow-sm"
+              className="bg-slate-800 dark:bg-blue-500 text-white px-2.5 py-1 rounded-lg text-[10px] font-bold flex items-center gap-2 shadow-sm"
             >
-              {l}{" "}
+              {l}
               <button
                 onClick={() => toggleLocalidad(l)}
-                className="hover:text-red-400"
+                className="hover:text-red-500"
               >
                 ✕
               </button>
@@ -103,11 +101,12 @@ export default function CombustiblesClient({ data }) {
         </div>
       </header>
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 flex-1 min-h-0">
         <aside className="space-y-4">
-          <div className="bg-white p-6 rounded-4xl border border-slate-200 shadow-sm sticky top-6">
-            <div className="mb-6 pb-6 border-b border-slate-100">
-              <label className="flex items-center cursor-pointer gap-3">
+          <div className="bg-white dark:bg-black p-4 rounded-2xl border border-slate-200 shadow-sm">
+            {/* FILTRO RECENCIA MÁS PEQUEÑO */}
+            <div className="mb-4 pb-4 border-b border-slate-100">
+              <label className="flex items-center cursor-pointer gap-2">
                 <div className="relative">
                   <input
                     type="checkbox"
@@ -116,55 +115,54 @@ export default function CombustiblesClient({ data }) {
                     onChange={() => setSoloActualizados(!soloActualizados)}
                   />
                   <div
-                    className={`block w-10 h-6 rounded-full transition-colors ${soloActualizados ? "bg-blue-600" : "bg-slate-300"}`}
+                    className={`block w-8 h-5 rounded-full transition-colors ${soloActualizados ? "bg-blue-500" : "bg-slate-300"}`}
                   ></div>
                   <div
-                    className={`absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform ${soloActualizados ? "translate-x-4" : ""}`}
+                    className={`absolute left-0.5 top-0.5 bg-white w-4 h-4 rounded-full transition-transform ${soloActualizados ? "translate-x-3" : ""}`}
                   ></div>
                 </div>
-                <span className="text-xs font-black text-slate-700 uppercase tracking-tighter">
+                <span className="text-[10px] font-black text-slate-700 dark:text-slate-200 uppercase tracking-tighter">
                   Solo precios recientes
                 </span>
               </label>
-              <p className="text-[10px] text-slate-400 mt-2 leading-tight">
-                Oculta surtidores que no actualizaron en los últimos 60 días.
-              </p>
             </div>
 
-            <label className="text-[10px] font-bold text-slate-400 uppercase block mb-2">
+            <label className="text-[9px] font-bold text-slate-400 dark:text-slate-200 uppercase block mb-1">
               1. Provincia
             </label>
             <select
-              className="w-full p-3 bg-slate-50 border-2 border-slate-100 rounded-xl mb-6 font-bold text-slate-700 outline-none focus:border-blue-500 transition-all"
+              className="w-full p-2 bg-slate-50 border dark:bg-black border-slate-200 rounded-lg mb-4 text-xs font-bold text-slate-700 dark:text-slate-300 outline-none focus:border-blue-500"
               value={selectedProvincia}
               onChange={(e) => handleProvinciaChange(e.target.value)}
             >
-              <option value="">Seleccionar...</option>
+              <option value="" className="dark:text-slate-300">
+                Seleccionar...
+              </option>
               {provincias.map((p) => (
-                <option key={p} value={p}>
+                <option key={p} value={p} className="dark:text-slate-300">
                   {p}
                 </option>
               ))}
             </select>
 
             {selectedProvincia && (
-              <div className="animate-in fade-in slide-in-from-top-2 duration-300">
-                <label className="text-[10px] font-bold text-slate-400 uppercase block mb-2">
+              <div className="animate-in fade-in slide-in-from-top-1 duration-200">
+                <label className="text-[9px] font-bold text-slate-400 dark:text-slate-200 uppercase block mb-1">
                   2. Ciudad
                 </label>
                 <input
                   type="text"
-                  placeholder="Escribe para buscar..."
-                  className="w-full p-3 bg-slate-50 border-2 border-slate-100 rounded-xl mb-4 text-sm outline-none focus:border-blue-500"
+                  placeholder="Buscar..."
+                  className="w-full p-2 bg-slate-50 dark:bg-black border border-slate-200 rounded-lg mb-2 text-xs dark:text-slate-200 outline-none focus:border-blue-500 dark:placeholder:text-slate-200"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
-                <div className="max-h-60 overflow-y-auto space-y-1 pr-2 custom-scrollbar">
+                <div className="max-h-48 overflow-y-auto space-y-0.5 pr-1 text-[11px]">
                   {localidadesFiltradas.map((l) => (
                     <button
                       key={l}
                       onClick={() => toggleLocalidad(l)}
-                      className={`w-full text-left px-4 py-2.5 rounded-xl text-xs transition-all ${selectedLocalidades.includes(l) ? "bg-blue-600 text-white font-bold shadow-md" : "hover:bg-slate-100 text-slate-600"}`}
+                      className={`w-full text-left px-3 py-1.5 rounded-lg transition-all ${selectedLocalidades.includes(l) ? "bg-blue-500 text-white font-bold dark:text-slate-200" : "hover:bg-slate-100 dark:hover:bg-slate-400 text-slate-200 dark:text-slate-200"}`}
                     >
                       {l}
                     </button>
@@ -175,61 +173,56 @@ export default function CombustiblesClient({ data }) {
           </div>
         </aside>
 
-        <section className="lg:col-span-3">
+        <section className="lg:col-span-3 h-full">
           {selectedLocalidades.length > 0 ? (
-            <Tablas
-              data={data}
-              locs={selectedLocalidades}
-              soloActualizados={soloActualizados}
-            />
+            <div className="h-full overflow-y-auto pr-2 custom-scrollbar">
+              <Tablas
+                data={data}
+                locs={selectedLocalidades}
+                soloActualizados={soloActualizados}
+              />
+            </div>
           ) : (
-            <div className="relative overflow-hidden bg-white border border-slate-200 rounded-[48px] p-8 md:p-16 shadow-sm">
-              <div className="absolute -top-24 -right-24 w-64 h-64 bg-blue-50 rounded-full opacity-50"></div>
-              <div className="absolute -bottom-12 -left-12 w-48 h-48 bg-slate-50 rounded-full opacity-80"></div>
+            /* CONTENEDOR AJUSTADO PARA EVITAR SCROLL EN 1366x768 */
+            <div className="bg-white dark:bg-black border border-slate-200 rounded-3xl p-6 shadow-sm flex flex-col items-center justify-center h-[calc(100vh-180px)] relative overflow-hidden">
+              {/* Decoración sutil */}
+              <div className="absolute top-0 right-0 w-48 h-48 bg-blue-50/40 rounded-full -mr-16 -mt-16 blur-2xl" />
 
-              <div className="relative z-10 flex flex-col items-center text-center max-w-md mx-auto">
-                <div className="w-20 h-20 bg-blue-600 rounded-3xl flex items-center justify-center shadow-xl shadow-blue-200 rotate-3 mb-8">
-                  <span className="text-4xl text-white">⛽</span>
+              <div className="relative z-10 flex flex-col items-center text-center ">
+                <div className="w-14 h-14 bg-blue-600 dark:bg-blue-400 rounded-2xl flex items-center justify-center mb-4 shadow-lg ">
+                  <span className="text-2xl">⛽</span>
                 </div>
 
-                <h2 className="text-3xl font-black text-slate-800 tracking-tighter mb-4">
+                <h2 className="text-3xl font-semibold text-slate-800 dark:text-slate-300 mb-2">
                   Comparador de{" "}
-                  <span className="text-blue-600">Combustibles</span>
+                  <span className="text-blue-600 dark:text-blue-400">
+                    Combustibles
+                  </span>
                 </h2>
 
-                <p className="text-slate-500 font-medium leading-relaxed mb-10">
-                  Analiza y compara los precios actualizados de estaciones de
-                  servicio en todo el país. Selecciona una provincia para
-                  comenzar.
+                <p className="text-slate-500 dark:text-slate-200 text-[13px] mb-6 font-medium leading-tight">
+                  Selecciona provincia y hasta 3 ciudades para comparar precios.
                 </p>
 
-                <div className="grid grid-cols-1 gap-4 w-full">
-                  <div className="flex items-center gap-4 bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                    <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center text-xs font-black shadow-sm text-blue-600">
-                      1
+                {/* Pasos compactos */}
+                <div className="space-y-4 w-full">
+                  {[
+                    { n: 1, t: "Selecciona una Provincia" },
+                    { n: 2, t: "Suma hasta 3 ciudades" },
+                    { n: 3, t: "Visualiza precios en tiempo real" },
+                  ].map((step) => (
+                    <div
+                      key={step.n}
+                      className="flex items-center gap-3 bg-slate-50/80 dark:bg-slate-800  p-3 rounded-xl border border-slate-100"
+                    >
+                      <div className="w-6 h-6 bg-white dark:bg-black rounded-lg flex items-center justify-center text-[12px] font-black shadow-sm dark:shadow-gray-200 text-blue-600 dark:text-blue-400 border border-blue-50">
+                        {step.n}
+                      </div>
+                      <p className="text-[11px] font-bold text-slate-600 dark:text-slate-100 uppercase tracking-tight">
+                        {step.t}
+                      </p>
                     </div>
-                    <p className="text-sm font-bold text-slate-600">
-                      Elige una Provincia en el panel lateral
-                    </p>
-                  </div>
-
-                  <div className="flex items-center gap-4 bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                    <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center text-xs font-black shadow-sm text-blue-600">
-                      2
-                    </div>
-                    <p className="text-sm font-bold text-slate-600">
-                      Suma hasta 3 ciudades para comparar
-                    </p>
-                  </div>
-
-                  <div className="flex items-center gap-4 bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                    <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center text-xs font-black shadow-sm text-blue-600">
-                      3
-                    </div>
-                    <p className="text-sm font-bold text-slate-600">
-                      Activa el filtro de recencia para mayor precisión
-                    </p>
-                  </div>
+                  ))}
                 </div>
               </div>
             </div>
@@ -248,20 +241,22 @@ function Tablas({ data, locs, soloActualizados }) {
   return empresas.map((emp) => (
     <div
       key={emp}
-      className="bg-white rounded-4xl border border-slate-200 shadow-sm overflow-hidden mb-8"
+      className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden mb-4"
     >
-      <div className="bg-slate-900 p-5 text-white flex justify-between items-center">
-        <h3 className="text-sm font-black tracking-widest uppercase">{emp}</h3>
+      <div className="bg-slate-900 dark:bg-gray-400 px-4 py-2 text-white dark:text-white">
+        <h3 className="text-[10px] font-black tracking-widest uppercase">
+          {emp}
+        </h3>
       </div>
       <div className="overflow-x-auto">
         <table className="w-full border-collapse">
           <thead>
-            <tr className="bg-slate-50 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">
-              <th className="p-5 text-left pl-8">Producto</th>
+            <tr className="bg-slate-50 dark:bg-gray-700 text-[9px] font-black text-slate-400 dark:text-slate-200 uppercase border-b border-slate-100">
+              <th className="p-3 text-left pl-6">Producto</th>
               {locs.map((l) => (
                 <th
                   key={l}
-                  className="p-5 border-l border-slate-100 text-center"
+                  className="p-3 border-l border-slate-100 text-center"
                 >
                   {l}
                 </th>
@@ -269,38 +264,27 @@ function Tablas({ data, locs, soloActualizados }) {
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-50">
-            <Fila
-              data={data}
-              locs={locs}
-              emp={emp}
-              label="Nafta Súper"
-              path={["nafta", "super"]}
-              soloActualizados={soloActualizados}
-            />
-            <Fila
-              data={data}
-              locs={locs}
-              emp={emp}
-              label="Nafta Premium"
-              path={["nafta", "premium"]}
-              soloActualizados={soloActualizados}
-            />
-            <Fila
-              data={data}
-              locs={locs}
-              emp={emp}
-              label="Gasoil G2"
-              path={["gasoil", "comun"]}
-              soloActualizados={soloActualizados}
-            />
-            <Fila
-              data={data}
-              locs={locs}
-              emp={emp}
-              label="Gasoil G3"
-              path={["gasoil", "premium"]}
-              soloActualizados={soloActualizados}
-            />
+            {["Nafta Súper", "Nafta Premium", "Gasoil G2", "Gasoil G3"].map(
+              (label, idx) => {
+                const paths = [
+                  ["nafta", "super"],
+                  ["nafta", "premium"],
+                  ["gasoil", "comun"],
+                  ["gasoil", "premium"],
+                ];
+                return (
+                  <Fila
+                    key={label}
+                    data={data}
+                    locs={locs}
+                    emp={emp}
+                    label={label}
+                    path={paths[idx]}
+                    soloActualizados={soloActualizados}
+                  />
+                );
+              },
+            )}
           </tbody>
         </table>
       </div>
@@ -310,7 +294,6 @@ function Tablas({ data, locs, soloActualizados }) {
 
 function Fila({ data, locs, emp, label, path, soloActualizados }) {
   const LIMITE_DIAS = 60;
-
   const getRecencia = (fecha) => {
     if (!fecha) return { dias: 999, esViejo: true };
     const dias = Math.floor(
@@ -321,7 +304,9 @@ function Fila({ data, locs, emp, label, path, soloActualizados }) {
 
   return (
     <tr className="hover:bg-blue-50/30 transition-colors">
-      <td className="p-5 text-sm font-bold text-slate-700 pl-8">{label}</td>
+      <td className="p-3 text-xs font-bold text-slate-700 dark:text-slate-100 dark:bg-black pl-6">
+        {label}
+      </td>
       {locs.map((l) => {
         const item = data[l][emp];
         const precio = item?.[path[0]]?.[path[1]];
@@ -329,30 +314,36 @@ function Fila({ data, locs, emp, label, path, soloActualizados }) {
 
         if (soloActualizados && esViejo && precio) {
           return (
-            <td key={l} className="p-5 border-l border-slate-100 text-center">
-              <span className="text-[10px] font-bold text-slate-300 italic uppercase">
-                Sin datos recientes
+            <td
+              key={l}
+              className="p-3 border-l border-slate-100 text-center dark:text-slate-100 dark:bg-black"
+            >
+              <span className="text-[9px] font-bold text-slate-300 italic uppercase">
+                Sin datos
               </span>
             </td>
           );
         }
 
         return (
-          <td key={l} className="p-5 border-l border-slate-100 text-center">
+          <td
+            key={l}
+            className="p-3 border-l border-slate-100 text-center dark:text-slate-100 dark:bg-black"
+          >
             {precio ? (
-              <div className="flex flex-col items-center gap-0.5">
+              <div className="flex flex-col items-center">
                 <span
-                  className={`text-xl font-black tracking-tight ${esViejo ? "text-slate-300" : "text-blue-700"}`}
+                  className={`text-base font-black tracking-tight ${esViejo ? "text-slate-300" : "text-blue-700 dark:text-blue-400"}`}
                 >
                   ${precio}
                 </span>
                 {esViejo ? (
-                  <span className="text-[8px] bg-amber-100 text-amber-600 px-2 py-0.5 rounded-full font-black uppercase">
-                    Hace {dias} días
+                  <span className="text-[8px] bg-amber-100 text-amber-600 px-1.5 py-0.5 rounded-full font-black uppercase">
+                    Hace {dias}d
                   </span>
                 ) : (
-                  <span className="text-[9px] text-slate-400 font-medium">
-                    Actualizado: {item.fechaActualizacion}
+                  <span className="text-[9px] text-slate-400 dark:text-slate-100 font-medium">
+                    {item.fechaActualizacion}
                   </span>
                 )}
               </div>
