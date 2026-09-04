@@ -220,7 +220,7 @@ export const getCombustiblesMarDelPlata = cache(async () => {
     try {
       overrides = await kv.get("combustibles_overrides");
     } catch (err) {
-      console.warn("No se pudo cargar overrides desde KV");
+      console.error("KV ERROR:", err);
     }
 
     // Aplicar overrides híbridos

@@ -1,5 +1,4 @@
 import Card from "../components/Card";
-import { getCombustiblesMarDelPlata } from "../lib/ypf";
 import { formatFechaHora } from "../lib/date";
 
 const LOGOS = {

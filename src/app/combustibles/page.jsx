@@ -1,5 +1,5 @@
 // import { getCombustiblesPorLocalidad } from "../lib/combustiblesPorCiudad";
-
+export const dynamic = "force-dynamic";
 import CombustiblesClient from "../lib/combustiblesClient";
 import { getCombustiblesPorLocalidad } from "../lib/combustiblesPorCiudad";
 

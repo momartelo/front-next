@@ -120,7 +120,7 @@ function procesarRegistros(records) {
   return resultado;
 }
 
-export const getCombustiblesPorLocalidad = cache(async () => {
+export const getCombustiblesPorLocalidad = async () => {
   try {
     // Usamos v2 para forzar la actualización de la estructura con provincia
     const cached = await kv.get("combustibles_v2");
@@ -128,9 +128,9 @@ export const getCombustiblesPorLocalidad = cache(async () => {
 
     const records = await fetchAllRecords();
     const data = procesarRegistros(records);
-    await kv.set("combustibles_v2", data, { ex: 86400 });
+    await kv.set("combustibles_v2", data, { ex: 3600 }); // 1 hora
     return data;
   } catch (error) {
     return null;
   }
-});
+};
