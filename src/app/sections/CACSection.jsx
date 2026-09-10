@@ -33,30 +33,33 @@ export default async function CACSection() {
   const renderVariacion = (variacion) => {
     if (variacion === null) return null;
 
+    const isPositive = variacion > 0;
+    const isNegative = variacion < 0;
+
+    const badgeStyles = isPositive
+      ? "bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20"
+      : isNegative
+        ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
+        : "bg-gray-500/10 text-gray-500 border-gray-500/20";
+
     return (
       <span
-        className={`flex items-center gap-1 text-sm font-semibold ${
-          variacion > 0
-            ? "text-red-600"
-            : variacion < 0
-              ? "text-green-600"
-              : "text-gray-500"
-        }`}
+        className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold border backdrop-blur-sm ${badgeStyles}`}
       >
-        {variacion > 0 && (
+        {isPositive && (
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            className="w-4 h-4"
+            className="w-3.5 h-3.5"
             viewBox="0 0 24 24"
             fill="currentColor"
           >
             <path d="M12 4l6 8h-4v8h-4v-8H6z" />
           </svg>
         )}
-        {variacion < 0 && (
+        {isNegative && (
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            className="w-4 h-4"
+            className="w-3.5 h-3.5"
             viewBox="0 0 24 24"
             fill="currentColor"
           >
@@ -66,7 +69,7 @@ export default async function CACSection() {
         {variacion === 0 && (
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            className="w-4 h-4"
+            className="w-3.5 h-3.5"
             viewBox="0 0 24 24"
             fill="currentColor"
           >
@@ -83,39 +86,48 @@ export default async function CACSection() {
   return (
     <div id="cac" className="flex flex-col">
       <Card title="Índice de la Construcción - CAC">
-        <p className="text-center text-sm text-gray-500 m-0 p-0">General</p>
-
-        <div className="flex items-center justify-center gap-8">
-          <p className="text-3xl font-bold text-blue-600">
-            {formatNumber(ultimo.general)}
-          </p>
-          {renderVariacion(variacionGeneral)}
+        <div className="flex flex-col items-center justify-center pt-2 pb-4 border-b border-gray-100 dark:border-neutral-800">
+          <span className="text-xs font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-1">
+            Índice General
+          </span>
+          <div className="flex items-center gap-3">
+            <p className="text-4xl font-bold tracking-tight text-blue-600 dark:text-blue-400">
+              {formatNumber(ultimo.general)}
+            </p>
+            {renderVariacion(variacionGeneral)}
+          </div>
         </div>
 
-        <div className="space-y-2 text-sm mt-4">
-          <div className="flex justify-between items-center">
-            <span className="text-gray-600 text-sm">Materiales</span>
-            <div className="flex items-center gap-3">
-              <span className="font-medium text-xl">
+        <div className="space-y-3 pt-4">
+          <div className="flex justify-between items-center p-2 rounded-xl hover:bg-gray-50 dark:hover:bg-neutral-800/50 transition-colors">
+            <span className="text-gray-600 dark:text-gray-300 font-medium text-sm">
+              Materiales
+            </span>
+            <div className="flex items-center gap-2.5">
+              <span className="font-bold text-lg text-gray-900 dark:text-white">
                 {formatNumber(ultimo.materials)}
               </span>
               {renderVariacion(variacionMateriales)}
             </div>
           </div>
 
-          <div className="flex justify-between items-center">
-            <span className="text-gray-600 text-sm">Mano de obra</span>
-            <div className="flex items-center gap-3">
-              <span className="font-medium text-xl">
+          <div className="flex justify-between items-center p-2 rounded-xl hover:bg-gray-50 dark:hover:bg-neutral-800/50 transition-colors">
+            <span className="text-gray-600 dark:text-gray-300 font-medium text-sm">
+              Mano de obra
+            </span>
+            <div className="flex items-center gap-2.5">
+              <span className="font-bold text-lg text-gray-900 dark:text-white">
                 {formatNumber(ultimo.labour_force)}
               </span>
               {renderVariacion(variacionManoObra)}
             </div>
           </div>
 
-          <p className="text-center text-xs text-gray-600 mt-2">
-            {formatPeriodoCAC(ultimo.period)}
-          </p>
+          <div className="pt-2 text-center">
+            <span className="inline-block px-3 py-1 bg-gray-100 dark:bg-neutral-800/80 rounded-full text-xs font-medium text-gray-500 dark:text-gray-400 border border-gray-200/50 dark:border-neutral-700/50">
+              Período: {formatPeriodoCAC(ultimo.period)}
+            </span>
+          </div>
         </div>
       </Card>
     </div>

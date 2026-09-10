@@ -1,7 +1,4 @@
 // import { getCombustiblesPorLocalidad } from "../lib/combustiblesPorCiudad";
-export const dynamic = "force-dynamic";
-import CombustiblesClient from "../lib/combustiblesClient";
-import { getCombustiblesPorLocalidad } from "../lib/combustiblesPorCiudad";
 
 // export default async function CombustiblesPage() {
 //   const data = await getCombustiblesPorLocalidad();
@@ -95,10 +92,80 @@ import { getCombustiblesPorLocalidad } from "../lib/combustiblesPorCiudad";
 //   );
 // }
 
-export default async function Page() {
-  // 1. Buscamos los datos en el servidor
-  const data = await getCombustiblesPorLocalidad();
+//-----------------------------------------------------------------------------------
+//! Version 2
 
-  // 2. Se los pasamos al componente de cliente como una "prop" llamada data
-  return <CombustiblesClient data={data} />;
+// export const dynamic = "force-dynamic";
+// import CombustiblesClient from "../lib/combustiblesClient";
+// import { getCombustiblesPorLocalidad } from "../lib/combustiblesPorCiudad";
+
+// export default async function Page() {
+//   const data = await getCombustiblesPorLocalidad();
+
+//   return <CombustiblesClient data={data} />;
+// }
+
+// app/combustibles/page.jsx
+// app/combustibles/page.jsx
+// app/combustibles/page.jsx
+// src/app/combustibles/page.jsx
+import { getDatosCombustibles } from "../lib/combustiblesPorCiudad";
+import CombustiblesClient from "../lib/combustiblesClient";
+import { Suspense } from "react";
+
+export const dynamic = "force-dynamic";
+
+async function CombustiblesData() {
+  const datos = await getDatosCombustibles();
+
+  if (datos.error) {
+    return (
+      <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400 text-sm">
+        <strong>Error de carga:</strong> {datos.error}
+      </div>
+    );
+  }
+
+  return (
+    <CombustiblesClient
+      registros={datos.registros}
+      provincias={datos.provincias}
+    />
+  );
+}
+
+export default function CombustiblesPage() {
+  return (
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
+          Precios de Combustibles
+        </h1>
+        <p className="text-sm text-slate-500 dark:text-slate-400">
+          Consulta y compara los precios vigentes por provincia, localidad y
+          estación de servicio
+        </p>
+      </div>
+
+      <Suspense fallback={<TablaLoadingSkeleton />}>
+        <CombustiblesData />
+      </Suspense>
+    </div>
+  );
+}
+
+function TablaLoadingSkeleton() {
+  return (
+    <div className="space-y-6 animate-pulse">
+      <div className="p-4 rounded-2xl bg-slate-100 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-800 h-20" />
+      <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 space-y-3">
+        {[...Array(6)].map((_, i) => (
+          <div
+            key={i}
+            className="h-10 w-full bg-slate-100 dark:bg-slate-800/50 rounded-xl"
+          />
+        ))}
+      </div>
+    </div>
+  );
 }

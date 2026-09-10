@@ -6,8 +6,8 @@ export default async function CACSChartSection() {
   const historico = await getCACHistorico();
 
   return (
-    <section className="mt-4">
-      <Card title="Evolución CAC" padding={"8px 24px 8px 0px"}>
+    <section>
+      <Card title="Evolución CAC" padding={"16px 16px 8px 8px"}>
         <CACChart data={historico.slice(-12)} />
       </Card>
     </section>

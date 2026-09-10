@@ -1,8 +1,17 @@
+// src/app/lib/ypf.js
 import { kv } from "@vercel/kv";
 import { cache } from "react";
+// Importación estática para que Vercel SÍ empaque el JSON local siempre
+import localOverrides from "../../../public/data/overrides.json";
 
 const DATASET_URL =
   'http://datos.energia.gob.ar/api/3/action/datastore_search?resource_id=80ac25de-a44a-4445-9215-090cf55cfda5&filters={"localidad":"MAR DEL PLATA"}';
+
+function tieneCredencialesKV() {
+  const url = process.env.KV_REST_API_URL;
+  const token = process.env.KV_REST_API_TOKEN;
+  return Boolean(url && token && url.startsWith("https://"));
+}
 
 const normalize = (v) =>
   String(v || "")
@@ -25,7 +34,6 @@ const PRODUCTOS = {
   gasoilPremium: ["gas oil grado 3"],
 };
 
-// Devuelve el precio más reciente de un producto
 function getLatestPrice(rows, productNames) {
   const filtered = rows.filter((r) =>
     productNames.includes(normalize(r.producto)),
@@ -46,7 +54,6 @@ function getLatestPrice(rows, productNames) {
   return { precio: Number(price.toFixed(2)), fecha: latestDate };
 }
 
-// Construye datos de la empresa desde oficial, incluyendo fechas por producto
 function buildEmpresa(records, empresaKey, nombre) {
   const keywords = EMPRESAS[empresaKey];
 
@@ -76,77 +83,61 @@ function buildEmpresa(records, empresaKey, nombre) {
       ? new Date(Math.max(...fechas)).toISOString().slice(0, 10)
       : null,
     nafta: {
-      super: naftaSuper?.precio ?? null,
-      premium: naftaPremium?.precio ?? null,
+      super: naftaSuper,
+      premium: naftaPremium,
     },
     gasoil: {
-      comun: gasoilComun?.precio ?? null,
-      premium: gasoilPremium?.precio ?? null,
+      comun: gasoilComun,
+      premium: gasoilPremium,
     },
-    // Fechas individuales por producto
-    naftaSuperFecha: naftaSuper?.fecha ?? null,
-    naftaPremiumFecha: naftaPremium?.fecha ?? null,
-    gasoilComunFecha: gasoilComun?.fecha ?? null,
-    gasoilPremiumFecha: gasoilPremium?.fecha ?? null,
   };
 }
 
-// Compara precio oficial vs override por fecha
-function elegirPrecio(oficial, manual) {
-  if (!oficial) return manual?.precio ?? null;
-  if (!manual) return oficial?.precio ?? null;
+// Devuelve el objeto completo { precio, fecha } seleccionado
+function elegirObjetoProducto(oficial, manual) {
+  if (!oficial && !manual) return null;
+  if (!oficial) return manual;
+  if (!manual) return oficial;
 
   const fechaOficial = oficial.fecha || "1900-01-01";
   const fechaManual = manual.fecha || "1900-01-01";
 
-  return new Date(fechaManual) > new Date(fechaOficial)
-    ? manual.precio
-    : oficial.precio;
+  return new Date(fechaManual) > new Date(fechaOficial) ? manual : oficial;
 }
 
-// Aplica overrides híbridos comparando fechas por producto
 function aplicarOverrideHibrido(oficial, manual) {
+  if (!manual && !oficial) return null;
   if (!manual) return oficial;
+  if (!oficial) return manual;
 
-  const naftaSuper = elegirPrecio(
-    { precio: oficial.nafta.super, fecha: oficial.naftaSuperFecha },
+  const naftaSuper = elegirObjetoProducto(
+    oficial.nafta?.super,
     manual.nafta?.super,
   );
-  const naftaPremium = elegirPrecio(
-    { precio: oficial.nafta.premium, fecha: oficial.naftaPremiumFecha },
+  const naftaPremium = elegirObjetoProducto(
+    oficial.nafta?.premium,
     manual.nafta?.premium,
   );
-  const gasoilComun = elegirPrecio(
-    { precio: oficial.gasoil.comun, fecha: oficial.gasoilComunFecha },
+  const gasoilComun = elegirObjetoProducto(
+    oficial.gasoil?.comun,
     manual.gasoil?.comun,
   );
-  const gasoilPremium = elegirPrecio(
-    { precio: oficial.gasoil.premium, fecha: oficial.gasoilPremiumFecha },
+  const gasoilPremium = elegirObjetoProducto(
+    oficial.gasoil?.premium,
     manual.gasoil?.premium,
   );
 
-  // Detectamos si algún precio viene del JSON
   const manualUsed =
-    (manual.nafta?.super && naftaSuper === manual.nafta.super.precio) ||
-    (manual.nafta?.premium && naftaPremium === manual.nafta.premium.precio) ||
-    (manual.gasoil?.comun && gasoilComun === manual.gasoil.comun.precio) ||
-    (manual.gasoil?.premium && gasoilPremium === manual.gasoil.premium.precio);
+    (manual.nafta?.super && naftaSuper === manual.nafta.super) ||
+    (manual.nafta?.premium && naftaPremium === manual.nafta.premium) ||
+    (manual.gasoil?.comun && gasoilComun === manual.gasoil.comun) ||
+    (manual.gasoil?.premium && gasoilPremium === manual.gasoil.premium);
 
-  // Fecha más reciente entre precios usados
   const fechas = [
-    manual.nafta?.super?.fecha && naftaSuper === manual.nafta.super.precio
-      ? manual.nafta.super.fecha
-      : oficial.naftaSuperFecha,
-    manual.nafta?.premium?.fecha && naftaPremium === manual.nafta.premium.precio
-      ? manual.nafta.premium.fecha
-      : oficial.naftaPremiumFecha,
-    manual.gasoil?.comun?.fecha && gasoilComun === manual.gasoil.comun.precio
-      ? manual.gasoil.comun.fecha
-      : oficial.gasoilComunFecha,
-    manual.gasoil?.premium?.fecha &&
-    gasoilPremium === manual.gasoil.premium.precio
-      ? manual.gasoil.premium.fecha
-      : oficial.gasoilPremiumFecha,
+    naftaSuper?.fecha,
+    naftaPremium?.fecha,
+    gasoilComun?.fecha,
+    gasoilPremium?.fecha,
   ].filter(Boolean);
 
   const fechaActualizacion =
@@ -160,13 +151,12 @@ function aplicarOverrideHibrido(oficial, manual) {
     empresa: oficial.empresa,
     localidad: oficial.localidad,
     fechaActualizacion,
-    manual: !!manualUsed, // <-- indicador de override
+    manual: !!manualUsed,
     nafta: { super: naftaSuper, premium: naftaPremium },
     gasoil: { comun: gasoilComun, premium: gasoilPremium },
   };
 }
 
-// Función principal
 export const getCombustiblesMarDelPlata = cache(async () => {
   try {
     const url = `${DATASET_URL}&limit=1000`;
@@ -192,7 +182,6 @@ export const getCombustiblesMarDelPlata = cache(async () => {
     }
 
     const json = await res.json();
-
     const records = json?.result?.records || [];
 
     let ypf = buildEmpresa(records, "ypf", "YPF");
@@ -200,30 +189,23 @@ export const getCombustiblesMarDelPlata = cache(async () => {
     let axion = buildEmpresa(records, "axion", "Axion");
     let puma = buildEmpresa(records, "puma", "Puma");
 
-    // Leer overrides desde filesystem
-    // let overrides = {};
-    // try {
-    //   const filePath = path.join(
-    //     process.cwd(),
-    //     "public",
-    //     "data",
-    //     "overrides.json",
-    //   );
-    //   const raw = fs.readFileSync(filePath, "utf8");
-    //   overrides = JSON.parse(raw);
-    // } catch (err) {
-    //   console.warn("No se pudo cargar overrides.json, se usan datos oficiales");
-    // }
+    let overrides = null;
 
-    let overrides = {};
-
-    try {
-      overrides = await kv.get("combustibles_overrides");
-    } catch (err) {
-      console.error("KV ERROR:", err);
+    // 1. Intentamos obtener datos desde Vercel KV en Producción
+    if (tieneCredencialesKV()) {
+      try {
+        overrides = await kv.get("combustibles_overrides");
+      } catch (err) {
+        console.warn("Error leyendo KV en Vercel, usando fallback local.");
+      }
     }
 
-    // Aplicar overrides híbridos
+    // 2. Si KV no retornó datos o estás en local, usamos la importación estática del JSON
+    if (!overrides) {
+      overrides = localOverrides;
+    }
+
+    // Aplicar overrides
     if (overrides) {
       ypf = overrides.ypf ? aplicarOverrideHibrido(ypf, overrides.ypf) : ypf;
       shell = overrides.shell
@@ -243,7 +225,6 @@ export const getCombustiblesMarDelPlata = cache(async () => {
     return null;
   }
 });
-
 // ----------------------------------------------------------------------------------------------------------------------
 
 // import fs from "fs";

@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Card from "./Card";
-import CACChart from "../components/CACChart";
 
 export default function CACSelector({ cacHistorico, ultimoCAC }) {
   const [selectedYear, setSelectedYear] = useState(null);
@@ -198,114 +197,137 @@ export default function CACSelector({ cacHistorico, ultimoCAC }) {
     if (valor === null) return null;
 
     return (
-      <span className="flex items-center justify-center gap-1 mt-1 text-sm font-semibold text-red-600">
+      <span className="inline-flex items-center justify-center gap-1.5 mt-2 px-3 py-1 bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20 rounded-full text-xs font-bold">
         <svg
           xmlns="http://www.w3.org/2000/svg"
-          className="w-4 h-4"
+          className="w-3.5 h-3.5"
           viewBox="0 0 24 24"
           fill="currentColor"
         >
           <path d="M12 4l6 8h-4v8h-4v-8H6z" />
         </svg>
         {formatNumber(valor)}%
-        <span className="text-xs font-normal text-gray-500">
-          desde ese período
+        <span className="font-normal text-gray-500 dark:text-gray-400">
+          acumulado
         </span>
       </span>
     );
   };
 
   const inputClassName =
-    "w-full border border-gray-300 rounded p-2 focus:ring-2 focus:ring-blue-500 outline-none";
+    "w-full bg-gray-50 dark:bg-neutral-900 border border-gray-200 dark:border-neutral-800 rounded-xl p-2.5 text-sm font-medium text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none";
 
   return (
-    <Card title="Índice CAC por período">
-      <div className="space-y-4 mt-2">
-        {/* SELECTORES */}
-        <div className="flex gap-4">
-          <select
-            className={`${inputClassName} dark:bg-black`}
-            value={selectedMonth ?? ""}
-            onChange={(e) => setSelectedMonth(Number(e.target.value))}
-            disabled={!selectedYear}
-          >
-            <option value="">Mes</option>
+    <Card title="Calculadora & Histórico por período">
+      <div className="space-y-5 mt-2">
+        {/* SELECTORES DE FECHA */}
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="block text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1.5">
+              Mes
+            </label>
+            <select
+              className={inputClassName}
+              value={selectedMonth ?? ""}
+              onChange={(e) => setSelectedMonth(Number(e.target.value))}
+              disabled={!selectedYear}
+            >
+              <option value="">Seleccionar Mes</option>
+              {months.map((month) => (
+                <option key={month} value={month}>
+                  {new Date(2000, month).toLocaleString("es-AR", {
+                    month: "long",
+                  })}
+                </option>
+              ))}
+            </select>
+          </div>
 
-            {months.map((month) => (
-              <option key={month} value={month}>
-                {new Date(2000, month).toLocaleString("es-AR", {
-                  month: "long",
-                })}
-              </option>
-            ))}
-          </select>
-
-          <select
-            className={`${inputClassName} dark:bg-black`}
-            value={selectedYear ?? ""}
-            onChange={(e) => {
-              setSelectedYear(Number(e.target.value));
-              setSelectedMonth(null);
-            }}
-          >
-            <option value="">Año</option>
-
-            {years.map((year) => (
-              <option key={year} value={year}>
-                {year}
-              </option>
-            ))}
-          </select>
+          <div>
+            <label className="block text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1.5">
+              Año
+            </label>
+            <select
+              className={inputClassName}
+              value={selectedYear ?? ""}
+              onChange={(e) => {
+                setSelectedYear(Number(e.target.value));
+                setSelectedMonth(null);
+              }}
+            >
+              <option value="">Seleccionar Año</option>
+              {years.map((year) => (
+                <option key={year} value={year}>
+                  {year}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
 
         {selectedCAC ? (
-          <div className="pt-2 border-t border-gray-200 space-y-3">
-            {/* INDICE */}
-            <div className="text-center">
-              <p className="text-3xl font-bold text-blue-600">
+          <div className="pt-4 border-t border-gray-100 dark:border-neutral-800 space-y-4">
+            {/* VALOR ÍNDICE */}
+            <div className="text-center p-3 rounded-2xl bg-gray-50/50 dark:bg-neutral-900/50 border border-gray-100 dark:border-neutral-800">
+              <span className="text-xs font-medium text-gray-400 uppercase tracking-wider">
+                Índice en el período
+              </span>
+              <p className="text-4xl font-bold text-blue-600 dark:text-blue-400 my-1">
                 {formatNumber(selectedCAC[indice])}
               </p>
 
               {renderVariacion(variacion)}
 
               {factorCAC && (
-                <p className="text-xs text-gray-500 mt-1">
-                  Factor CAC{" "}
-                  <span className="font-semibold">
+                <div className="mt-2 text-xs text-gray-500 dark:text-gray-400 font-medium">
+                  Multiplicador CAC:{" "}
+                  <span className="font-bold text-gray-800 dark:text-gray-200">
                     ×{formatFactor(factorCAC)}
                   </span>
-                </p>
+                </div>
               )}
 
-              <p className="text-xs text-gray-400 mt-1">
+              <p className="text-[11px] text-gray-400 dark:text-gray-500 mt-1">
                 {formatPeriod(selectedCAC.period)} vs{" "}
                 {formatPeriod(ultimoCAC.period)}
               </p>
             </div>
 
-            {/* OTROS INDICES */}
-            <div className="flex justify-center gap-6 text-sm">
+            {/* DESGLOSE OTROS ÍNDICES */}
+            <div className="grid grid-cols-2 gap-2 text-xs bg-gray-50 dark:bg-neutral-800/40 p-2.5 rounded-xl">
               {indice !== "general" && (
-                <span>General: {formatNumber(selectedCAC.general)}</span>
+                <div className="flex justify-between p-1">
+                  <span className="text-gray-500">General:</span>
+                  <span className="font-semibold">
+                    {formatNumber(selectedCAC.general)}
+                  </span>
+                </div>
               )}
               {indice !== "materials" && (
-                <span>Materiales: {formatNumber(selectedCAC.materials)}</span>
+                <div className="flex justify-between p-1">
+                  <span className="text-gray-500">Materiales:</span>
+                  <span className="font-semibold">
+                    {formatNumber(selectedCAC.materials)}
+                  </span>
+                </div>
               )}
               {indice !== "labour_force" && (
-                <span>
-                  Mano de obra: {formatNumber(selectedCAC.labour_force)}
-                </span>
+                <div className="flex justify-between p-1">
+                  <span className="text-gray-500">Mano de Obra:</span>
+                  <span className="font-semibold">
+                    {formatNumber(selectedCAC.labour_force)}
+                  </span>
+                </div>
               )}
             </div>
 
-            {/* SELECTOR INDICE */}
+            {/* SELECTOR TIPO DE ÍNDICE */}
             <div>
-              <label className="block text-sm font-medium mb-1">
-                Tipo de índice
+              <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">
+                Tipo de índice a aplicar
               </label>
-
               <select
-                className={`${inputClassName} dark:bg-black`}
+                className={inputClassName}
                 value={indice}
                 onChange={(e) => setIndice(e.target.value)}
               >
@@ -315,51 +337,52 @@ export default function CACSelector({ cacHistorico, ultimoCAC }) {
               </select>
             </div>
 
-            {/* MONTO */}
+            {/* CAMPO DE MONTO */}
             <div>
-              <label className="block text-sm font-medium mb-1">
-                Monto a actualizar
+              <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">
+                Monto original a actualizar
               </label>
-
               <div className="relative">
-                <span className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+                <span className="absolute inset-y-0 left-3.5 flex items-center pointer-events-none text-gray-400 font-bold">
                   $
                 </span>
-
                 <input
                   type="text"
                   inputMode="decimal"
                   placeholder="0,00"
-                  className={`${inputClassName} pl-8`}
+                  className={`${inputClassName} pl-8 text-base font-semibold`}
                   value={displayAmount}
                   onChange={handleInputChange}
                 />
               </div>
             </div>
 
-            {/* RESULTADO */}
+            {/* RESULTADO CALCULADO */}
             {updatedAmount && (
-              <div className="mt-4 pt-2 text-center bg-green-50 dark:bg-emerald-950 rounded-lg py-3 border border-green-100">
-                <p className="text-xs text-green-700 dark:text-green-200 font-medium uppercase tracking-wider">
-                  Monto actualizado
+              <div className="p-4 text-center bg-linear-to-br from-emerald-500/10 via-emerald-500/5 to-transparent dark:from-emerald-950/40 dark:to-neutral-900 rounded-2xl border border-emerald-500/20 shadow-sm">
+                <p className="text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">
+                  Monto Actualizado al Último CAC
                 </p>
 
-                <p className="text-2xl font-bold text-green-600 dark:text-green-200">
+                <p className="text-3xl font-bold text-emerald-600 dark:text-emerald-400 my-1 ">
                   ${formatNumber(updatedAmount)}
                 </p>
 
                 {factorCAC && (
-                  <p className="text-xs text-green-700 dark:text-green-300 mt-1">
-                    Multiplicador CAC ×{formatFactor(factorCAC)}
+                  <p className="text-xs text-emerald-700/80 dark:text-emerald-300/80 font-medium">
+                    Aplicando factor ×{formatFactor(factorCAC)}
                   </p>
                 )}
               </div>
             )}
           </div>
         ) : (
-          <p className="text-sm pt-2 text-center italic">
-            Seleccioná un año y luego un mes
-          </p>
+          <div className="p-8 text-center border-2 border-dashed border-gray-200 dark:border-neutral-800 rounded-2xl">
+            <p className="text-sm text-gray-400 dark:text-gray-500 font-medium">
+              Selecciona un año y un mes para consultar los datos y calcular
+              valores
+            </p>
+          </div>
         )}
       </div>
     </Card>

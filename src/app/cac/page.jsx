@@ -6,9 +6,9 @@ import CACSChartSection from "../sections/CACChartSection";
 
 export default async function Dashboard() {
   return (
-    <main className="p-6">
-      <section className="2xl:h-[70vh] 2xl:max-w-7xl max-w-5xl mx-auto grid gap-4 md:grid-cols-2">
-        <div id="cac" className="flex flex-col h-full">
+    <main className="p-4 sm:p-6 lg:p-8 min-h-screen">
+      <section className="2xl:max-w-7xl max-w-5xl mx-auto grid gap-6 md:grid-cols-2 items-start">
+        <div id="cac" className="flex flex-col gap-6 h-full">
           <Suspense fallback={<CardSkeleton title="CAC" />}>
             <CACSection />
           </Suspense>
@@ -25,7 +25,6 @@ export default async function Dashboard() {
     </main>
   );
 }
-
 // export const runtime = "nodejs";
 // // export const revalidate = 900;
 // export const dynamic = "force-dynamic";

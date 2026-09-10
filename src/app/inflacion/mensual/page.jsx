@@ -68,7 +68,7 @@ export default function InflationDashboard() {
     setMounted(true);
   }, []);
 
-  // 🔹 Carga de ambas series (Mensual e Interanual Oficial)
+  // 🔹 Carga de ambas series y selección por defecto de los últimos 12 meses
   useEffect(() => {
     async function loadData() {
       try {
@@ -85,8 +85,14 @@ export default function InflationDashboard() {
         );
 
         setInflacionHistorica(sortedMensual);
-        setFiltrada(sortedMensual);
         setInflacionInteranual(sortedInteranual);
+
+        // 👉 Filtro inicial por defecto: Últimos 12 meses
+        if (sortedMensual.length > 0) {
+          const ultimos12 = sortedMensual.slice(-12);
+          setFechaInicio(new Date(ultimos12[0].fecha));
+          setFechaFin(new Date(ultimos12[ultimos12.length - 1].fecha));
+        }
       } catch (err) {
         console.error("Error al cargar datos de inflación:", err);
       } finally {
@@ -96,7 +102,7 @@ export default function InflationDashboard() {
     loadData();
   }, []);
 
-  // 🔹 FILTRADO AUTOMÁTICO (con ajuste para tomar meses completos)
+  // 🔹 FILTRADO AUTOMÁTICO
   useEffect(() => {
     if (!inflacionHistorica.length) return;
 
@@ -162,7 +168,6 @@ export default function InflationDashboard() {
   const inflacionAcumulada = useMemo(() => {
     if (!filtrada.length) return null;
 
-    // Caso A: Si son exactamente 12 meses, buscar el dato interanual oficial del último mes
     if (filtrada.length === 12) {
       const ultimoMes = filtrada[filtrada.length - 1];
       const dateUltimo = new Date(ultimoMes.fecha);
@@ -183,7 +188,6 @@ export default function InflationDashboard() {
       }
     }
 
-    // Caso B: Para cualquier otro número de meses, calcular encadenando porcentajes
     const factorTotal = filtrada.reduce((acc, item) => {
       const tasaMensual = item.valor / 100;
       return acc * (1 + tasaMensual);
@@ -334,14 +338,6 @@ export default function InflationDashboard() {
                 <span className="text-xl uppercase font-semibold text-gray-500 dark:text-gray-400 tracking-wider">
                   Inflación Acumulada del Período
                 </span>
-                {/* <span className="text-xs text-gray-500 dark:text-gray-400">
-                  {filtrada.length}{" "}
-                  {filtrada.length === 1
-                    ? "mes seleccionado"
-                    : "meses seleccionados"}
-                  {inflacionAcumulada.esOficialInteranual &&
-                    " (Dato interanual oficial INDEC)"}
-                </span> */}
               </div>
               <div className="text-2xl md:text-3xl font-extrabold text-blue-600 dark:text-blue-400 font-mono">
                 {inflacionAcumulada.valor.toFixed(2)}%
@@ -396,7 +392,6 @@ export default function InflationDashboard() {
     </div>
   );
 }
-
 // "use client";
 
 // import dynamic from "next/dynamic";

@@ -17,7 +17,7 @@ import {
   Legend,
 } from "chart.js";
 
-import { CircularProgress } from "@mui/material";
+import { Skeleton } from "@mui/material";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 import { LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
@@ -32,9 +32,17 @@ ChartJS.register(
   Legend,
 );
 
+// Skeleton mientras se descarga la librería pesada del DatePicker
+const DatePickerSkeleton = () => (
+  <Skeleton variant="rounded" width={145} height={36} className="rounded-xl" />
+);
+
 const DatePicker = dynamic(
   () => import("@mui/x-date-pickers/DatePicker").then((mod) => mod.DatePicker),
-  { ssr: false },
+  {
+    ssr: false,
+    loading: () => <DatePickerSkeleton />,
+  },
 );
 
 export default function DolarPage() {
@@ -51,7 +59,6 @@ export default function DolarPage() {
   const [fechaFin, setFechaFin] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isFiltering, setIsFiltering] = useState(false);
-  const [mounted, setMounted] = useState(false);
 
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === "dark";
@@ -65,10 +72,6 @@ export default function DolarPage() {
       }),
     [isDark],
   );
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   useEffect(() => {
     getDolaresHistorico().then((data) => {
@@ -131,24 +134,28 @@ export default function DolarPage() {
   const setRangoMeses = (meses, id) => {
     if (!dolarHistorico.length) return;
 
-    const fechaFin = getUltimaFecha();
-    const fechaInicio = new Date(fechaFin);
-    fechaInicio.setMonth(fechaInicio.getMonth() - meses);
+    const fechaFinCalculada = getUltimaFecha();
+    const fechaInicioCalculada = new Date(fechaFinCalculada);
+    fechaInicioCalculada.setMonth(fechaInicioCalculada.getMonth() - meses);
 
     setRangoActivo(id);
-    setFechaInicio(fechaInicio);
-    setFechaFin(fechaFin);
+    setFechaInicio(fechaInicioCalculada);
+    setFechaFin(fechaFinCalculada);
   };
 
   const handleYTD = () => {
     if (!dolarHistorico.length) return;
 
-    const fechaFin = getUltimaFecha();
-    const fechaInicio = new Date(fechaFin.getFullYear(), 0, 1);
+    const fechaFinCalculada = getUltimaFecha();
+    const fechaInicioCalculada = new Date(
+      fechaFinCalculada.getFullYear(),
+      0,
+      1,
+    );
 
     setRangoActivo("ytd");
-    setFechaInicio(fechaInicio);
-    setFechaFin(fechaFin);
+    setFechaInicio(fechaInicioCalculada);
+    setFechaFin(fechaFinCalculada);
   };
 
   const handleResetDates = () => {
@@ -157,7 +164,6 @@ export default function DolarPage() {
     setFechaFin(null);
   };
 
-  // 🔹 Acumulado del período (Mide la suba de 'Desde' hasta 'Hasta')
   const acumuladoOficial = useMemo(() => {
     if (!filtradoOficial.length) return null;
     const inicial = filtradoOficial[0].venta;
@@ -325,7 +331,7 @@ export default function DolarPage() {
     };
   }, [isDark]);
 
-  if (!mounted) return null;
+  const isLoadingData = loading || isFiltering;
 
   return (
     <div className="p-4 flex flex-col items-center min-h-[calc(100vh-70px)]">
@@ -336,7 +342,7 @@ export default function DolarPage() {
           dateAdapter={AdapterDateFns}
           adapterLocale={esLocale}
         >
-          {/* Barra de Control Unificada */}
+          {/* Barra de Control */}
           <div className="flex flex-wrap items-center justify-center gap-3 mb-5">
             <div className="bg-gray-100 dark:bg-neutral-800/80 p-1 rounded-xl border border-gray-200/70 dark:border-neutral-700/60 flex items-center gap-1 shadow-inner">
               {[
@@ -430,94 +436,123 @@ export default function DolarPage() {
         </LocalizationProvider>
       </ThemeProvider>
 
-      {/* 🔹 Tarjetas de Aumento Acumulado en el Período */}
-      {!loading && !isFiltering && (
-        <div className="w-full xl:w-[90%] 2xl:w-[calc(100%-6rem)] grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
-          {(vistaDolar === "oficial" || vistaDolar === "ambos") &&
-            acumuladoOficial && (
-              <div
-                className={`p-3.5 px-4 rounded-xl border border-gray-200/80 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-sm flex items-center justify-between ${vistaDolar === "oficial" ? "md:col-span-2" : ""}`}
-              >
-                <div className="flex flex-col gap-1">
-                  <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                    Acumulado Dólar Oficial (
-                    {formatFechaCompleta(acumuladoOficial.fechaInicial)} a{" "}
-                    {formatFechaCompleta(acumuladoOficial.fechaFinal)})
-                  </span>
-                  <div className="flex items-center gap-3 text-sm font-semibold text-gray-800 dark:text-gray-200">
-                    <span>
-                      Inicial:{" "}
-                      <strong className="text-gray-900 dark:text-white font-extrabold">
-                        ${acumuladoOficial.inicial.toFixed(2)}
-                      </strong>
-                    </span>
-                    <span className="text-gray-300 dark:text-neutral-700">
-                      |
-                    </span>
-                    <span>
-                      Final:{" "}
-                      <strong className="text-blue-600 dark:text-blue-400 font-extrabold">
-                        ${acumuladoOficial.final.toFixed(2)}
-                      </strong>
-                    </span>
-                  </div>
-                </div>
-
-                <span className="text-lg font-black px-3 py-1 rounded-xl bg-blue-50 text-blue-600 dark:bg-blue-950/40 dark:text-blue-400 border border-blue-200/50 dark:border-blue-800/40">
-                  +
-                  {acumuladoOficial.pct.toLocaleString("es-AR", {
-                    maximumFractionDigits: 2,
-                  })}
-                  %
-                </span>
-              </div>
+      {/* Tarjetas de Acumulado */}
+      <div className="w-full xl:w-[90%] 2xl:w-[calc(100%-6rem)] grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
+        {isLoadingData ? (
+          <>
+            {(vistaDolar === "oficial" || vistaDolar === "ambos") && (
+              <Skeleton
+                variant="rounded"
+                height={72}
+                className={`rounded-xl ${
+                  vistaDolar === "oficial" ? "md:col-span-2" : ""
+                }`}
+              />
             )}
-
-          {(vistaDolar === "blue" || vistaDolar === "ambos") &&
-            acumuladoBlue && (
-              <div
-                className={`p-3.5 px-4 rounded-xl border border-gray-200/80 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-sm flex items-center justify-between ${vistaDolar === "blue" ? "md:col-span-2" : ""}`}
-              >
-                <div className="flex flex-col gap-1">
-                  <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                    Acumulado Dólar Blue (
-                    {formatFechaCompleta(acumuladoBlue.fechaInicial)} a{" "}
-                    {formatFechaCompleta(acumuladoBlue.fechaFinal)})
-                  </span>
-                  <div className="flex items-center gap-3 text-sm font-semibold text-gray-800 dark:text-gray-200">
-                    <span>
-                      Inicial:{" "}
-                      <strong className="text-gray-900 dark:text-white font-extrabold">
-                        ${acumuladoBlue.inicial.toFixed(2)}
-                      </strong>
-                    </span>
-                    <span className="text-gray-300 dark:text-neutral-700">
-                      |
-                    </span>
-                    <span>
-                      Final:{" "}
-                      <strong className="text-emerald-600 dark:text-emerald-400 font-extrabold">
-                        ${acumuladoBlue.final.toFixed(2)}
-                      </strong>
-                    </span>
-                  </div>
-                </div>
-
-                <span className="text-lg font-black px-3 py-1 rounded-xl bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400 border border-emerald-200/50 dark:border-emerald-800/40">
-                  +
-                  {acumuladoBlue.pct.toLocaleString("es-AR", {
-                    maximumFractionDigits: 2,
-                  })}
-                  %
-                </span>
-              </div>
+            {(vistaDolar === "blue" || vistaDolar === "ambos") && (
+              <Skeleton
+                variant="rounded"
+                height={72}
+                className={`rounded-xl ${
+                  vistaDolar === "blue" ? "md:col-span-2" : ""
+                }`}
+              />
             )}
-        </div>
-      )}
+          </>
+        ) : (
+          <>
+            {(vistaDolar === "oficial" || vistaDolar === "ambos") &&
+              acumuladoOficial && (
+                <div
+                  className={`p-3.5 px-4 rounded-xl border border-gray-200/80 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-sm flex items-center justify-between ${
+                    vistaDolar === "oficial" ? "md:col-span-2" : ""
+                  }`}
+                >
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                      Acumulado Dólar Oficial (
+                      {formatFechaCompleta(acumuladoOficial.fechaInicial)} a{" "}
+                      {formatFechaCompleta(acumuladoOficial.fechaFinal)})
+                    </span>
+                    <div className="flex items-center gap-3 text-sm font-semibold text-gray-800 dark:text-gray-200">
+                      <span>
+                        Inicial:{" "}
+                        <strong className="text-gray-900 dark:text-white font-extrabold">
+                          ${acumuladoOficial.inicial.toFixed(2)}
+                        </strong>
+                      </span>
+                      <span className="text-gray-300 dark:text-neutral-700">
+                        |
+                      </span>
+                      <span>
+                        Final:{" "}
+                        <strong className="text-blue-600 dark:text-blue-400 font-extrabold">
+                          ${acumuladoOficial.final.toFixed(2)}
+                        </strong>
+                      </span>
+                    </div>
+                  </div>
 
-      {loading || isFiltering ? (
-        <div className="mt-8">
-          <CircularProgress />
+                  <span className="text-lg font-black px-3 py-1 rounded-xl bg-blue-50 text-blue-600 dark:bg-blue-950/40 dark:text-blue-400 border border-blue-200/50 dark:border-blue-800/40">
+                    +
+                    {acumuladoOficial.pct.toLocaleString("es-AR", {
+                      maximumFractionDigits: 2,
+                    })}
+                    %
+                  </span>
+                </div>
+              )}
+
+            {(vistaDolar === "blue" || vistaDolar === "ambos") &&
+              acumuladoBlue && (
+                <div
+                  className={`p-3.5 px-4 rounded-xl border border-gray-200/80 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-sm flex items-center justify-between ${
+                    vistaDolar === "blue" ? "md:col-span-2" : ""
+                  }`}
+                >
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                      Acumulado Dólar Blue (
+                      {formatFechaCompleta(acumuladoBlue.fechaInicial)} a{" "}
+                      {formatFechaCompleta(acumuladoBlue.fechaFinal)})
+                    </span>
+                    <div className="flex items-center gap-3 text-sm font-semibold text-gray-800 dark:text-gray-200">
+                      <span>
+                        Inicial:{" "}
+                        <strong className="text-gray-900 dark:text-white font-extrabold">
+                          ${acumuladoBlue.inicial.toFixed(2)}
+                        </strong>
+                      </span>
+                      <span className="text-gray-300 dark:text-neutral-700">
+                        |
+                      </span>
+                      <span>
+                        Final:{" "}
+                        <strong className="text-emerald-600 dark:text-emerald-400 font-extrabold">
+                          ${acumuladoBlue.final.toFixed(2)}
+                        </strong>
+                      </span>
+                    </div>
+                  </div>
+
+                  <span className="text-lg font-black px-3 py-1 rounded-xl bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400 border border-emerald-200/50 dark:border-emerald-800/40">
+                    +
+                    {acumuladoBlue.pct.toLocaleString("es-AR", {
+                      maximumFractionDigits: 2,
+                    })}
+                    %
+                  </span>
+                </div>
+              )}
+          </>
+        )}
+      </div>
+
+      {/* Gráfico + Tabla */}
+      {isLoadingData ? (
+        <div className="w-full 2xl:w-[calc(100%-6rem)] 2xl:mx-12 xl:w-[90%] grid grid-cols-1 xl:grid-cols-[1fr_280px] gap-4">
+          <Skeleton variant="rounded" className="h-[65vh] w-full rounded-xl" />
+          <Skeleton variant="rounded" className="h-[65vh] w-full rounded-xl" />
         </div>
       ) : filtradoOficialReducido.length > 0 ||
         filtradoBlueReducido.length > 0 ? (
@@ -585,7 +620,9 @@ export default function DolarPage() {
           </div>
         </div>
       ) : (
-        <p>No hay datos para el rango seleccionado.</p>
+        <p className="text-gray-500 mt-8">
+          No hay datos para el rango seleccionado.
+        </p>
       )}
     </div>
   );

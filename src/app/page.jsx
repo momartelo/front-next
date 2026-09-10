@@ -10,47 +10,86 @@ import { getDolares } from "./lib/dolar";
 import { getCombustiblesMarDelPlata } from "./lib/ypf";
 import { getCACHistorico } from "./lib/cac";
 
-export default async function Dashboard() {
-  const dolaresPromise = getDolares();
-  const combustiblesPromise = getCombustiblesMarDelPlata();
-  const cacPromise = getCACHistorico();
+// Componente Wrapper asíncrono para cargar los datos de ShareButton en segundo plano sin bloquear el render
+async function ShareButtonWrapper() {
+  const [dolares, combustiblesResult, cac] = await Promise.allSettled([
+    getDolares(),
+    getCombustiblesMarDelPlata(),
+    getCACHistorico(),
+  ]);
 
-  const dolares = await dolaresPromise;
-  const cac = await cacPromise;
+  const dolaresData = dolares.status === "fulfilled" ? dolares.value : null;
+  const combustiblesData =
+    combustiblesResult.status === "fulfilled" ? combustiblesResult.value : null;
+  const cacData = cac.status === "fulfilled" ? cac.value : null;
 
-  let combustibles = null;
-  try {
-    combustibles = await combustiblesPromise;
-  } catch {
-    combustibles = null;
-  }
-
-  const ultimoCAC = cac?.at(-1);
+  const ultimoCAC = cacData?.at(-1);
 
   const shareData = {
-    blue: dolares?.find((d) => d.nombre === "Blue")?.venta || "0",
-    ypf: combustibles?.ypf?.nafta?.super || "0",
+    blue: dolaresData?.find((d) => d.nombre === "Blue")?.venta || "0",
+    ypf: combustiblesData?.ypf?.nafta?.super || "0",
     cac: ultimoCAC?.general || "0",
   };
 
-  return (
-    <main className="p-6 max-w-7xl mx-auto">
-      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_0.4fr]">
-        <Suspense fallback={<CardSkeleton title="Dólares" />}>
-          <DolaresSection />
-        </Suspense>
+  return <ShareButton datos={shareData} />;
+}
 
-        <div className="flex flex-col gap-4">
+// Componente Wrapper para Combustibles
+async function CombustiblesWrapper() {
+  let combustibles = null;
+  try {
+    combustibles = await getCombustiblesMarDelPlata();
+  } catch {
+    combustibles = null;
+  }
+  return <CombustiblesSection combustibles={combustibles} />;
+}
+
+export default function Dashboard() {
+  return (
+    <main className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6">
+      <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b pb-5 border-gray-200 dark:border-gray-800 gap-4">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-gray-900 dark:text-gray-100">
+            Monitor Económico
+          </h1>
+          <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1">
+            Cotizaciones e indicadores en tiempo real
+          </p>
+        </div>
+        <Suspense
+          fallback={
+            <div className="w-24 h-9 bg-gray-200 dark:bg-gray-800 animate-pulse rounded-lg" />
+          }
+        >
+          <ShareButtonWrapper />
+        </Suspense>
+      </header>
+
+      {/* Grilla: Columna 1 y 2 anchas (1fr), Columna 3 más angosta (280px) */}
+      <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[1fr_1fr_0.35fr] gap-6 items-stretch">
+        {/* COLUMNA 1 (IZQUIERDA): Dólares */}
+        <div className="flex flex-col h-full">
+          <Suspense fallback={<CardSkeleton title="Dólares" />}>
+            <DolaresSection />
+          </Suspense>
+        </div>
+
+        {/* COLUMNA 2 (CENTRO): Monedas + Combustibles */}
+        <div className="flex flex-col gap-6 h-full justify-between">
           <Suspense fallback={<CardSkeleton title="Euro / Real" />}>
             <MonedasSection />
           </Suspense>
 
           <Suspense fallback={<CardSkeleton title="Combustibles" />}>
-            <CombustiblesSection combustibles={combustibles} />
+            <div className="flex-1 flex flex-col justify-end">
+              <CombustiblesWrapper />
+            </div>
           </Suspense>
         </div>
 
-        <div className="flex flex-col gap-4">
+        {/* COLUMNA 3 (DERECHA): Columna más angosta con los 4 bloques */}
+        <div className="flex flex-col gap-3 h-full justify-between md:col-span-2 lg:col-span-1">
           <Suspense fallback={<CardSkeleton title="Inflación" />}>
             <InflacionSection />
           </Suspense>
@@ -60,11 +99,78 @@ export default async function Dashboard() {
           </Suspense>
         </div>
       </section>
-
-      <ShareButton datos={shareData} />
     </main>
   );
 }
+//!----------------------------------------------------------------
+
+// import { Suspense } from "react";
+// import CardSkeleton from "./components/CardSkeleton";
+// import DolaresSection from "./sections/DolaresSection";
+// import MonedasSection from "./sections/MonedasSection";
+// import InflacionSection from "./sections/InflacionSection";
+// import IndicesSection from "./sections/IndicesSection";
+// import CombustiblesSection from "./sections/CombustiblesSection";
+// import ShareButton from "./components/ShareButton";
+// import { getDolares } from "./lib/dolar";
+// import { getCombustiblesMarDelPlata } from "./lib/ypf";
+// import { getCACHistorico } from "./lib/cac";
+
+// export default async function Dashboard() {
+//   const dolaresPromise = getDolares();
+//   const combustiblesPromise = getCombustiblesMarDelPlata();
+//   const cacPromise = getCACHistorico();
+
+//   const dolares = await dolaresPromise;
+//   const cac = await cacPromise;
+
+//   let combustibles = null;
+//   try {
+//     combustibles = await combustiblesPromise;
+//   } catch {
+//     combustibles = null;
+//   }
+
+//   const ultimoCAC = cac?.at(-1);
+
+//   const shareData = {
+//     blue: dolares?.find((d) => d.nombre === "Blue")?.venta || "0",
+//     ypf: combustibles?.ypf?.nafta?.super || "0",
+//     cac: ultimoCAC?.general || "0",
+//   };
+
+//   return (
+//     <main className="p-6 max-w-7xl mx-auto">
+//       <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_0.4fr]">
+//         <Suspense fallback={<CardSkeleton title="Dólares" />}>
+//           <DolaresSection />
+//         </Suspense>
+
+//         <div className="flex flex-col gap-4">
+//           <Suspense fallback={<CardSkeleton title="Euro / Real" />}>
+//             <MonedasSection />
+//           </Suspense>
+
+//           <Suspense fallback={<CardSkeleton title="Combustibles" />}>
+//             <CombustiblesSection combustibles={combustibles} />
+//           </Suspense>
+//         </div>
+
+//         <div className="flex flex-col gap-4">
+//           <Suspense fallback={<CardSkeleton title="Inflación" />}>
+//             <InflacionSection />
+//           </Suspense>
+
+//           <Suspense fallback={<CardSkeleton title="Índices" />}>
+//             <IndicesSection />
+//           </Suspense>
+//         </div>
+//       </section>
+
+//       <ShareButton datos={shareData} />
+//     </main>
+//   );
+// }
 
 // export const runtime = "nodejs";
 // // export const revalidate = 900;

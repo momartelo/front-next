@@ -29,9 +29,9 @@ export default function Nav() {
     { label: "CAC", href: "/cac" },
   ];
 
-  // 🎨 Estilos reutilizables
+  // 🎨 Estilos reutilizables (solo agregamos whitespace-nowrap)
   const baseLink =
-    "relative px-1 py-2 transition-colors duration-300 after:absolute after:left-0 after:-bottom-px after:h-0.5 after:w-0 after:transition-all after:duration-300";
+    "relative px-1 py-2 whitespace-nowrap transition-colors duration-300 after:absolute after:left-0 after:-bottom-px after:h-0.5 after:w-0 after:transition-all after:duration-300";
 
   const activeLink =
     "text-blue-500 dark:text-blue-400 after:w-full after:bg-blue-400 dark:after:bg-blue-300";
@@ -42,7 +42,7 @@ export default function Nav() {
   return (
     <header className="sticky top-0 z-50 backdrop-blur border-b border-gray-200 dark:border-neutral-800 bg-white/70 dark:bg-neutral-900/70">
       <nav className="max-w-7xl mx-auto flex items-center justify-between p-4">
-        <h2 className="font-semibold text-lg flex items-center gap-1">
+        <h2 className="font-semibold text-lg flex items-center gap-4">
           <span>📊</span>
           <span className="hidden sm:inline">Dashboard Económico</span>
         </h2>
@@ -56,7 +56,9 @@ export default function Nav() {
                     pathname.includes("/inflacion") ? activeLink : inactiveLink
                   }`}
                 >
-                  {item.label} ▾
+                  <span className="inline-flex items-center gap-1">
+                    {item.label} <span>▾</span>
+                  </span>
                 </button>
 
                 <div className="absolute left-0 top-full hidden group-hover:block w-44 rounded-md shadow-lg border z-50 bg-white dark:bg-neutral-900 border-gray-200 dark:border-neutral-800 py-2">
