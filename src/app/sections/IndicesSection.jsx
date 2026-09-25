@@ -10,17 +10,15 @@ export default async function IndicesSection() {
   ]);
 
   return (
-    <div className="flex flex-col gap-3 flex-1">
+    <div className="contents lg:flex lg:flex-col lg:gap-3 lg:flex-1">
       {/* 3. Valor UVA */}
-      <Card center titleCenter={true} padding="p-3 sm:p-4" className="flex-1">
+      <Card center titleCenter={true} padding="p-3 sm:p-4" className="h-full">
         <div className="h-full flex flex-col justify-between items-center w-full">
-          {/* Arriba: Título */}
           <span className="text-[11px] font-semibold text-gray-400 dark:text-gray-400 uppercase tracking-wider block">
             Valor UVA
           </span>
 
-          {/* Centro: Número */}
-          <div className="my-auto">
+          <div className="my-auto py-2">
             {uva ? (
               <p className="text-2xl sm:text-3xl font-bold text-indigo-600 dark:text-indigo-400 tracking-tight">
                 ${uva.valor.toFixed(2)}
@@ -30,7 +28,6 @@ export default async function IndicesSection() {
             )}
           </div>
 
-          {/* Abajo: Fecha */}
           <small className="text-gray-400 dark:text-gray-500 text-[10px] block">
             {uva ? formatFechaISO(uva.fecha) : "—"}
           </small>
@@ -38,15 +35,13 @@ export default async function IndicesSection() {
       </Card>
 
       {/* 4. Riesgo País */}
-      <Card center titleCenter={true} padding="p-3 sm:p-4" className="flex-1">
+      <Card center titleCenter={true} padding="p-3 sm:p-4" className="h-full">
         <div className="h-full flex flex-col justify-between items-center w-full">
-          {/* Arriba: Título */}
           <span className="text-[11px] font-semibold text-gray-400 dark:text-gray-400 uppercase tracking-wider block">
             Riesgo País
           </span>
 
-          {/* Centro: Número */}
-          <div className="my-auto">
+          <div className="my-auto py-2">
             {riesgo ? (
               <p className="text-2xl sm:text-3xl font-bold text-amber-600 dark:text-amber-500 tracking-tight">
                 {riesgo.valor.toFixed(0)}{" "}
@@ -57,7 +52,6 @@ export default async function IndicesSection() {
             )}
           </div>
 
-          {/* Abajo: Fecha */}
           <small className="text-gray-400 dark:text-gray-500 text-[10px] block">
             {riesgo ? formatFechaISO(riesgo.fecha) : "—"}
           </small>

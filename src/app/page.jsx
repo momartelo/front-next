@@ -88,8 +88,8 @@ export default function Dashboard() {
           </Suspense>
         </div>
 
-        {/* COLUMNA 3 (DERECHA): Columna más angosta con los 4 bloques */}
-        <div className="flex flex-col gap-3 h-full justify-between md:col-span-2 lg:col-span-1">
+        {/* COLUMNA 3 (DERECHA): Grilla 2x2 en pantallas <1024px, 1 columna en >=1024px */}
+        <div className="grid grid-cols-2 lg:flex lg:flex-col gap-3 md:col-span-2 lg:col-span-1">
           <Suspense fallback={<CardSkeleton title="Inflación" />}>
             <InflacionSection />
           </Suspense>

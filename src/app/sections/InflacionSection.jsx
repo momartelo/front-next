@@ -12,17 +12,15 @@ export default async function InflacionSection() {
   ]);
 
   return (
-    <div className="flex flex-col gap-3 flex-1">
+    <div className="contents lg:flex lg:flex-col lg:gap-3 lg:flex-1">
       {/* 1. Inflación Mensual */}
-      <Card center titleCenter={true} padding="p-3 sm:p-4" className="flex-1">
+      <Card center titleCenter={true} padding="p-3 sm:p-4" className="h-full">
         <div className="h-full flex flex-col justify-between items-center w-full">
-          {/* Arriba: Título */}
           <span className="text-[11px] font-semibold text-gray-400 dark:text-gray-400 uppercase tracking-wider block">
             Inflación Mensual
           </span>
 
-          {/* Centro: Número */}
-          <div className="my-auto">
+          <div className="my-auto py-2">
             {mensual ? (
               <p className="text-2xl sm:text-3xl font-bold text-red-600 dark:text-red-500 tracking-tight">
                 {mensual.valor.toFixed(2)}%
@@ -32,7 +30,6 @@ export default async function InflacionSection() {
             )}
           </div>
 
-          {/* Abajo: Fecha */}
           <small className="text-gray-400 dark:text-gray-500 text-[10px] block">
             {mensual ? formatFechaISO(mensual.fecha) : "—"}
           </small>
@@ -40,15 +37,13 @@ export default async function InflacionSection() {
       </Card>
 
       {/* 2. Inflación Interanual */}
-      <Card center titleCenter={true} padding="p-3 sm:p-4" className="flex-1">
+      <Card center titleCenter={true} padding="p-3 sm:p-4" className="h-full">
         <div className="h-full flex flex-col justify-between items-center w-full">
-          {/* Arriba: Título */}
           <span className="text-[11px] font-semibold text-gray-400 dark:text-gray-400 uppercase tracking-wider block">
             Inflación Interanual
           </span>
 
-          {/* Centro: Número */}
-          <div className="my-auto">
+          <div className="my-auto py-2">
             {interanual ? (
               <p className="text-2xl sm:text-3xl font-bold text-red-600 dark:text-red-500 tracking-tight">
                 {interanual.valor.toFixed(2)}%
@@ -58,7 +53,6 @@ export default async function InflacionSection() {
             )}
           </div>
 
-          {/* Abajo: Fecha */}
           <small className="text-gray-400 dark:text-gray-500 text-[10px] block">
             {interanual ? formatFechaISO(interanual.fecha) : "—"}
           </small>
