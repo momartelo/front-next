@@ -3,26 +3,39 @@ import { getCACHistorico } from "../lib/cac";
 import { formatPeriodoCAC } from "../lib/date";
 
 export default async function CACSection() {
-  const historico = await getCACHistorico();
+  const { data: historico } = await getCACHistorico();
+
   const ultimo = historico.at(-1);
   const anterior = historico.at(-2);
 
   const calcularVariacion = (actual, previo) => {
-    if (!previo || !previo) return null;
+    if (
+      actual === null ||
+      actual === undefined ||
+      previo === null ||
+      previo === undefined ||
+      previo === 0
+    ) {
+      return null;
+    }
+
     return ((actual - previo) / previo) * 100;
   };
 
-  const variacionGeneral = anterior?.general
-    ? calcularVariacion(ultimo.general, anterior.general)
-    : null;
+  const variacionGeneral =
+    ultimo?.general != null && anterior?.general != null
+      ? calcularVariacion(ultimo.general, anterior.general)
+      : null;
 
-  const variacionMateriales = anterior?.materials
-    ? calcularVariacion(ultimo.materials, anterior.materials)
-    : null;
+  const variacionMateriales =
+    ultimo?.materials != null && anterior?.materials != null
+      ? calcularVariacion(ultimo.materials, anterior.materials)
+      : null;
 
-  const variacionManoObra = anterior?.labour_force
-    ? calcularVariacion(ultimo.labour_force, anterior.labour_force)
-    : null;
+  const variacionManoObra =
+    ultimo?.labour_force != null && anterior?.labour_force != null
+      ? calcularVariacion(ultimo.labour_force, anterior.labour_force)
+      : null;
 
   const formatNumber = (value) =>
     Number(value).toLocaleString("es-AR", {
@@ -81,7 +94,9 @@ export default async function CACSection() {
     );
   };
 
-  if (!ultimo) return <Card title="CAC">No disponible</Card>;
+  if (!ultimo) {
+    return <Card title="CAC">No disponible</Card>;
+  }
 
   return (
     <div id="cac" className="flex flex-col">
@@ -90,10 +105,14 @@ export default async function CACSection() {
           <span className="text-xs font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-1">
             Índice General
           </span>
+
           <div className="flex items-center gap-3">
             <p className="text-4xl font-bold tracking-tight text-blue-600 dark:text-blue-400">
-              {formatNumber(ultimo.general)}
+              {ultimo.general != null
+                ? formatNumber(ultimo.general)
+                : "No disponible"}
             </p>
+
             {renderVariacion(variacionGeneral)}
           </div>
         </div>
@@ -103,10 +122,14 @@ export default async function CACSection() {
             <span className="text-gray-600 dark:text-gray-300 font-medium text-sm">
               Materiales
             </span>
+
             <div className="flex items-center gap-2.5">
               <span className="font-bold text-lg text-gray-900 dark:text-white">
-                {formatNumber(ultimo.materials)}
+                {ultimo.materials != null
+                  ? formatNumber(ultimo.materials)
+                  : "No disponible"}
               </span>
+
               {renderVariacion(variacionMateriales)}
             </div>
           </div>
@@ -115,10 +138,14 @@ export default async function CACSection() {
             <span className="text-gray-600 dark:text-gray-300 font-medium text-sm">
               Mano de obra
             </span>
+
             <div className="flex items-center gap-2.5">
               <span className="font-bold text-lg text-gray-900 dark:text-white">
-                {formatNumber(ultimo.labour_force)}
+                {ultimo.labour_force != null
+                  ? formatNumber(ultimo.labour_force)
+                  : "No disponible"}
               </span>
+
               {renderVariacion(variacionManoObra)}
             </div>
           </div>

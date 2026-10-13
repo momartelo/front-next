@@ -12,7 +12,12 @@ import {
 } from "recharts";
 import { useTheme } from "next-themes";
 
-export default function CACChart({ data, indice, selectedPeriod }) {
+export default function CACChart({
+  data,
+  indice,
+  selectedPeriod,
+  anomalies = [],
+}) {
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === "dark";
 
@@ -27,59 +32,74 @@ export default function CACChart({ data, indice, selectedPeriod }) {
 
     return data.map((item) => ({
       ...item,
+
       label: new Date(item.period).toLocaleString("es-AR", {
         month: "short",
         year: "2-digit",
         timeZone: "UTC",
       }),
+
       selected: item.period === selectedPeriod,
     }));
   }, [data, selectedPeriod]);
 
-  if (!mounted || !formattedData.length) return null;
+  if (!mounted || !formattedData.length) {
+    return null;
+  }
 
   const axisColor = isDark ? "#9CA3AF" : "#6B7280";
 
   const CustomTooltip = ({ active, payload, label }) => {
-    if (!active || !payload?.length) return null;
+    if (!active || !payload?.length) {
+      return null;
+    }
 
     return (
       <div
-        className={`rounded-xl px-3.5 py-2.5 text-xs shadow-xl border backdrop-blur-md transition-all
-          ${
-            isDark
-              ? "bg-neutral-900/90 border-neutral-700/80 text-gray-100 shadow-black/40"
-              : "bg-white/95 border-gray-200/80 text-gray-900 shadow-gray-200/50"
-          }`}
+        className={`rounded-xl px-3.5 py-2.5 text-xs shadow-xl border backdrop-blur-md transition-all ${
+          isDark
+            ? "bg-neutral-900/90 border-neutral-700/80 text-gray-100 shadow-black/40"
+            : "bg-white/95 border-gray-200/80 text-gray-900 shadow-gray-200/50"
+        }`}
       >
         <p className="font-bold border-b border-gray-200/50 dark:border-neutral-700/50 pb-1.5 mb-2 text-gray-500 dark:text-gray-400">
           Período: {label}
         </p>
 
         <div className="space-y-1">
-          {payload.map((item) => (
-            <div
-              key={item.dataKey}
-              className="flex items-center justify-between gap-6"
-            >
-              <span
-                className="font-semibold flex items-center gap-1.5"
-                style={{ color: item.stroke }}
+          {payload.map((item) => {
+            // No mostramos valores null
+            // correspondientes a datos descartados.
+            if (item.value === null || item.value === undefined) {
+              return null;
+            }
+
+            return (
+              <div
+                key={item.dataKey}
+                className="flex items-center justify-between gap-6"
               >
                 <span
-                  className="w-2 h-2 rounded-full"
-                  style={{ backgroundColor: item.stroke }}
-                />
-                {item.name}
-              </span>
-              <span className="font-mono font-bold">
-                {Number(item.value).toLocaleString("es-AR", {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                })}
-              </span>
-            </div>
-          ))}
+                  className="font-semibold flex items-center gap-1.5"
+                  style={{ color: item.stroke }}
+                >
+                  <span
+                    className="w-2 h-2 rounded-full"
+                    style={{ backgroundColor: item.stroke }}
+                  />
+
+                  {item.name}
+                </span>
+
+                <span className="font-mono font-bold">
+                  {Number(item.value).toLocaleString("es-AR", {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })}
+                </span>
+              </div>
+            );
+          })}
         </div>
       </div>
     );
@@ -111,14 +131,24 @@ export default function CACChart({ data, indice, selectedPeriod }) {
         <LineChart data={formattedData}>
           <XAxis
             dataKey="label"
-            tick={{ fill: axisColor, fontSize: 11, fontWeight: 500 }}
-            axisLine={{ stroke: isDark ? "#374151" : "#E5E7EB" }}
+            tick={{
+              fill: axisColor,
+              fontSize: 11,
+              fontWeight: 500,
+            }}
+            axisLine={{
+              stroke: isDark ? "#374151" : "#E5E7EB",
+            }}
             tickLine={false}
             dy={5}
           />
 
           <YAxis
-            tick={{ fill: axisColor, fontSize: 11, fontWeight: 500 }}
+            tick={{
+              fill: axisColor,
+              fontSize: 11,
+              fontWeight: 500,
+            }}
             axisLine={false}
             tickLine={false}
             width={70}
@@ -129,9 +159,13 @@ export default function CACChart({ data, indice, selectedPeriod }) {
           <Legend
             iconSize={8}
             iconType="circle"
-            wrapperStyle={{ fontSize: 12, paddingTop: 12 }}
+            wrapperStyle={{
+              fontSize: 12,
+              paddingTop: 12,
+            }}
           />
 
+          {/* GENERAL */}
           <Line
             type="monotone"
             dataKey="general"
@@ -139,9 +173,11 @@ export default function CACChart({ data, indice, selectedPeriod }) {
             stroke="#3B82F6"
             strokeWidth={indice === "general" ? 3 : 1.5}
             opacity={indice === "general" ? 1 : 0.35}
+            connectNulls={false}
             dot={renderDot}
           />
 
+          {/* MATERIALES */}
           <Line
             type="monotone"
             dataKey="materials"
@@ -149,9 +185,11 @@ export default function CACChart({ data, indice, selectedPeriod }) {
             stroke="#10B981"
             strokeWidth={indice === "materials" ? 3 : 1.5}
             opacity={indice === "materials" ? 1 : 0.35}
+            connectNulls={false}
             dot={renderDot}
           />
 
+          {/* MANO DE OBRA */}
           <Line
             type="monotone"
             dataKey="labour_force"
@@ -159,13 +197,55 @@ export default function CACChart({ data, indice, selectedPeriod }) {
             stroke="#EF4444"
             strokeWidth={indice === "labour_force" ? 3 : 1.5}
             opacity={indice === "labour_force" ? 1 : 0.35}
+            connectNulls={false}
             dot={renderDot}
           />
         </LineChart>
       </ResponsiveContainer>
+
+      {/* AVISO DE VALORES ANÓMALOS */}
+      {anomalies.length > 0 && (
+        <div
+          className={`mt-4 rounded-xl border px-4 py-3 text-sm ${
+            isDark
+              ? "border-amber-900/50 bg-amber-950/30 text-amber-200"
+              : "border-amber-200 bg-amber-50 text-amber-900"
+          }`}
+        >
+          <div className="font-semibold">⚠️ Se detectaron valores anómalos</div>
+
+          <div className="mt-1.5 space-y-1">
+            {anomalies.map((anomaly) => (
+              <div key={`${anomaly.period}-${anomaly.field}`}>
+                {new Date(anomaly.period).toLocaleString("es-AR", {
+                  month: "long",
+                  year: "numeric",
+                  timeZone: "UTC",
+                })}
+
+                {" — "}
+
+                <strong>{anomaly.fieldName}</strong>
+
+                {": el valor "}
+
+                <strong>
+                  {Number(anomaly.value).toLocaleString("es-AR", {
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 2,
+                  })}
+                </strong>
+
+                {" fue descartado por presentar una variación anómala."}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+
 // "use client";
 
 // import { useEffect, useState, useMemo } from "react";

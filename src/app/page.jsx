@@ -10,7 +10,8 @@ import { getDolares } from "./lib/dolar";
 import { getCombustiblesMarDelPlata } from "./lib/ypf";
 import { getCACHistorico } from "./lib/cac";
 
-// Componente Wrapper asíncrono para cargar los datos de ShareButton en segundo plano sin bloquear el render
+// Componente Wrapper asíncrono para cargar los datos de ShareButton
+// en segundo plano sin bloquear el render
 async function ShareButtonWrapper() {
   const [dolares, combustiblesResult, cac] = await Promise.allSettled([
     getDolares(),
@@ -19,15 +20,23 @@ async function ShareButtonWrapper() {
   ]);
 
   const dolaresData = dolares.status === "fulfilled" ? dolares.value : null;
+
   const combustiblesData =
     combustiblesResult.status === "fulfilled" ? combustiblesResult.value : null;
+
   const cacData = cac.status === "fulfilled" ? cac.value : null;
 
-  const ultimoCAC = cacData?.at(-1);
+  // getCACHistorico() ahora devuelve:
+  // { data, anomalies }
+  const historicoCAC = cacData?.data ?? [];
+
+  const ultimoCAC = historicoCAC.at(-1);
 
   const shareData = {
     blue: dolaresData?.find((d) => d.nombre === "Blue")?.venta || "0",
+
     ypf: combustiblesData?.ypf?.nafta?.super || "0",
+
     cac: ultimoCAC?.general || "0",
   };
 
@@ -37,11 +46,13 @@ async function ShareButtonWrapper() {
 // Componente Wrapper para Combustibles
 async function CombustiblesWrapper() {
   let combustibles = null;
+
   try {
     combustibles = await getCombustiblesMarDelPlata();
   } catch {
     combustibles = null;
   }
+
   return <CombustiblesSection combustibles={combustibles} />;
 }
 
@@ -53,10 +64,12 @@ export default function Dashboard() {
           <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-gray-900 dark:text-gray-100">
             Monitor Económico
           </h1>
+
           <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1">
             Cotizaciones e indicadores en tiempo real
           </p>
         </div>
+
         <Suspense
           fallback={
             <div className="w-24 h-9 bg-gray-200 dark:bg-gray-800 animate-pulse rounded-lg" />

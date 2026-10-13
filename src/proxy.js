@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-export function middleware(req) {
+export default function proxy(req) {
   if (req.nextUrl.pathname.startsWith("/admin")) {
     const authHeader = req.headers.get("authorization");
 
@@ -14,9 +14,8 @@ export function middleware(req) {
     }
 
     const base64Credentials = authHeader.split(" ")[1];
-    const credentials = Buffer.from(base64Credentials, "base64").toString(
-      "utf-8",
-    );
+    // atob es nativo en Edge Runtime / Next.js
+    const credentials = atob(base64Credentials);
 
     const [user, pass] = credentials.split(":");
 
