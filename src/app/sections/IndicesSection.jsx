@@ -14,13 +14,13 @@ export default async function IndicesSection() {
       {/* 3. Valor UVA */}
       <Card center titleCenter={true} padding="p-3 sm:p-4" className="h-full">
         <div className="h-full flex flex-col justify-between items-center w-full">
-          <span className="text-[11px] font-semibold text-gray-400 dark:text-gray-400 uppercase tracking-wider block">
+          <span className="text-[11px] font-semibold text-gray-900 dark:text-gray-100 uppercase tracking-wider block">
             Valor UVA
           </span>
 
-          <div className="my-auto py-2">
+          <div className="py-2 flex items-center justify-center">
             {uva ? (
-              <p className="text-2xl sm:text-3xl font-bold text-indigo-600 dark:text-indigo-400 tracking-tight">
+              <p className="text-2xl sm:text-3xl font-bold text-indigo-700 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/40 px-2.5 pt-1 pb-1.5 rounded-md border border-indigo-200/60 dark:border-indigo-800/50 tracking-tight">
                 ${uva.valor.toFixed(2)}
               </p>
             ) : (
@@ -37,15 +37,17 @@ export default async function IndicesSection() {
       {/* 4. Riesgo País */}
       <Card center titleCenter={true} padding="p-3 sm:p-4" className="h-full">
         <div className="h-full flex flex-col justify-between items-center w-full">
-          <span className="text-[11px] font-semibold text-gray-400 dark:text-gray-400 uppercase tracking-wider block">
+          <span className="text-[11px] font-semibold text-gray-900 dark:text-gray-100 uppercase tracking-wider block">
             Riesgo País
           </span>
 
-          <div className="my-auto py-2">
+          <div className="py-2 flex items-center justify-center">
             {riesgo ? (
-              <p className="text-2xl sm:text-3xl font-bold text-amber-600 dark:text-amber-500 tracking-tight">
+              <p className="text-2xl sm:text-3xl font-bold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 px-2.5 pt-1 pb-1.5 rounded-md border border-amber-200/60 dark:border-amber-800/50 tracking-tight">
                 {riesgo.valor.toFixed(0)}{" "}
-                <span className="text-xs font-bold text-gray-400">pts</span>
+                <span className="text-xs font-bold text-amber-700 dark:text-amber-400">
+                  pts
+                </span>
               </p>
             ) : (
               <p className="text-xs text-gray-400">—</p>

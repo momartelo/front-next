@@ -35,7 +35,9 @@ export default function Card({
         bg-white dark:bg-gray-900 
         rounded-2xl h-full 
         transition-all duration-200 
-        shadow-sm hover:shadow-md 
+        shadow-sm hover:shadow-md
+        dark:shadow-white/10
+        dark:hover:shadow-white/10
         ${noBorder ? "" : "border border-gray-100 dark:border-gray-800/80"} 
         ${getPaddingClass()} 
         ${className}

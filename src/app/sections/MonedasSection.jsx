@@ -24,14 +24,14 @@ export default async function MonedasSection() {
             </h3>
             <div className="space-y-1 text-xs sm:text-sm">
               <p className="flex justify-between text-gray-500 dark:text-gray-400">
-                <span>Compra:</span>
-                <span className="font-medium text-gray-900 dark:text-gray-200">
+                <span className="block text-left py-1">Compra:</span>
+                <span className="font-bold text-sm bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 px-2.5 py-1 rounded-md border border-amber-200/60 dark:border-amber-800/50">
                   ${euro?.compra?.toFixed(2) ?? "-"}
                 </span>
               </p>
               <p className="flex justify-between text-gray-500 dark:text-gray-400">
-                <span>Venta:</span>
-                <span className="font-semibold text-emerald-600 dark:text-emerald-400">
+                <span className="block text-left py-1">Venta:</span>
+                <span className="font-bold text-sm bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 px-2.5 py-1 rounded-md border border-emerald-200/50 dark:border-emerald-800/50">
                   ${euro?.venta?.toFixed(2) ?? "-"}
                 </span>
               </p>
@@ -50,14 +50,14 @@ export default async function MonedasSection() {
             </h3>
             <div className="space-y-1 text-xs sm:text-sm">
               <p className="flex justify-between text-gray-500 dark:text-gray-400">
-                <span>Compra:</span>
-                <span className="font-medium text-gray-900 dark:text-gray-200">
+                <span className="block text-left py-1">Compra:</span>
+                <span className="font-bold text-sm bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 px-2.5 py-1 rounded-md border border-amber-200/60 dark:border-amber-800/50">
                   ${real?.compra?.toFixed(2) ?? "-"}
                 </span>
               </p>
               <p className="flex justify-between text-gray-500 dark:text-gray-400">
-                <span>Venta:</span>
-                <span className="font-semibold text-emerald-600 dark:text-emerald-400">
+                <span className="block text-left py-1">Venta:</span>
+                <span className="font-bold text-sm bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 px-2.5 py-1 rounded-md border border-emerald-200/50 dark:border-emerald-800/50">
                   ${real?.venta?.toFixed(2) ?? "-"}
                 </span>
               </p>

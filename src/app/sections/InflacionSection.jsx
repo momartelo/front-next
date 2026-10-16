@@ -16,13 +16,13 @@ export default async function InflacionSection() {
       {/* 1. Inflación Mensual */}
       <Card center titleCenter={true} padding="p-3 sm:p-4" className="h-full">
         <div className="h-full flex flex-col justify-between items-center w-full">
-          <span className="text-[11px] font-semibold text-gray-400 dark:text-gray-400 uppercase tracking-wider block">
+          <span className="text-[11px] font-semibold text-gray-900 dark:text-gray-100 uppercase tracking-wider block">
             Inflación Mensual
           </span>
 
-          <div className="my-auto py-2">
+          <div className="py-2">
             {mensual ? (
-              <p className="text-2xl sm:text-3xl font-bold text-red-600 dark:text-red-500 tracking-tight">
+              <p className="text-2xl sm:text-3xl font-bold text-red-700 dark:text-red-400 bg-red-50 dark:bg-red-950/40 px-2.5 pt-1 pb-1.5 rounded-md border border-red-200/60 dark:border-red-800/50 tracking-tight">
                 {mensual.valor.toFixed(2)}%
               </p>
             ) : (
@@ -39,13 +39,13 @@ export default async function InflacionSection() {
       {/* 2. Inflación Interanual */}
       <Card center titleCenter={true} padding="p-3 sm:p-4" className="h-full">
         <div className="h-full flex flex-col justify-between items-center w-full">
-          <span className="text-[11px] font-semibold text-gray-400 dark:text-gray-400 uppercase tracking-wider block">
+          <span className="text-[11px] font-semibold text-gray-900 dark:text-gray-100 uppercase tracking-wider block">
             Inflación Interanual
           </span>
 
-          <div className="my-auto py-2">
+          <div className="py-2 flex items-center justify-center">
             {interanual ? (
-              <p className="text-2xl sm:text-3xl font-bold text-red-600 dark:text-red-500 tracking-tight">
+              <p className="text-2xl sm:text-3xl font-bold text-red-700 dark:text-red-400 bg-red-50 dark:bg-red-950/40 px-2.5 pt-1 pb-1.5 rounded-md border border-red-200/60 dark:border-red-800/50 tracking-tight">
                 {interanual.valor.toFixed(2)}%
               </p>
             ) : (

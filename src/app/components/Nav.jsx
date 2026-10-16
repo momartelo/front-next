@@ -42,14 +42,19 @@ export default function MobileNavDemo() {
   const active = (href) =>
     href === "/" ? pathname === "/" : pathname === href;
 
+  const handleClose = () => {
+    setOpen(false);
+    setInflationOpen(false);
+  };
+
   return (
-    <header className="sticky top-0 z-50 border-b border-gray-200/80 bg-white/80 backdrop-blur-xl dark:border-neutral-800 dark:bg-neutral-950/80">
+    <header className="sticky top-0 z-50 border-b border-gray-200/80 bg-[#f9fcf3] backdrop-blur-xl dark:border-neutral-800 dark:bg-gray-950">
       <nav className="relative mx-auto flex max-w-7xl items-center justify-between gap-3 p-4">
         {/* Marca */}
         <Link
           href="/"
           className="flex min-w-0 items-center gap-2"
-          onClick={() => setOpen(false)}
+          onClick={handleClose}
         >
           <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-600 text-xl text-white shadow-sm">
             📊
@@ -78,13 +83,13 @@ export default function MobileNavDemo() {
         </div>
 
         {/* Navegación escritorio */}
-        <div className="hidden items-center gap-6 md:flex">
+        <div className="hidden items-center gap-4 md:flex">
           {items.map((item) =>
             item.children ? (
               <div key={item.label} className="group relative">
                 <button
                   type="button"
-                  className={`flex items-center gap-1 py-2 text-sm transition hover:text-blue-500 ${
+                  className={`flex items-center gap-1 py-2 text-sm transition px-2 cursor-pointer rounded-lg hover:bg-gray-100 hover:text-blue-500 dark:hover:bg-neutral-900 ${
                     pathname.startsWith("/inflacion") ? "text-blue-500" : ""
                   }`}
                 >
@@ -96,7 +101,7 @@ export default function MobileNavDemo() {
                     <Link
                       key={child.href}
                       href={child.href}
-                      className={`block rounded-lg px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-neutral-800 ${
+                      className={`block rounded-lg px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-neutral-800  hover:text-blue-500  ${
                         active(child.href) ? "text-blue-500" : ""
                       }`}
                     >
@@ -109,7 +114,7 @@ export default function MobileNavDemo() {
               <Link
                 key={item.href}
                 href={item.href}
-                className={`py-2 text-sm transition hover:text-blue-500 ${
+                className={`py-2 text-sm transition hover:text-blue-500 hover:bg-gray-100 px-2 rounded-lg dark:hover:bg-neutral-900 ${
                   active(item.href) ? "text-blue-500" : ""
                 }`}
               >
@@ -121,7 +126,11 @@ export default function MobileNavDemo() {
           <button
             type="button"
             onClick={() => setTheme(currentTheme === "dark" ? "light" : "dark")}
-            className="flex h-9 w-9 items-center justify-center rounded-xl border border-gray-200 dark:border-neutral-700"
+            className={`flex h-9 w-9 items-center cursor-pointer justify-center rounded-xl border ${
+              currentTheme === "dark"
+                ? "border-sky-400 bg-sky-400"
+                : "border-blue-800 bg-blue-800"
+            }`}
             aria-label="Cambiar tema"
           >
             {currentTheme === "dark" ? "☀️" : "🌙"}
@@ -134,7 +143,7 @@ export default function MobileNavDemo() {
             <button
               type="button"
               aria-label="Cerrar menú"
-              onClick={() => setOpen(false)}
+              onClick={handleClose}
               className="fixed inset-0 top-18 z-40 cursor-default bg-black/10 backdrop-blur-[2px] md:hidden"
             />
 
@@ -177,7 +186,7 @@ export default function MobileNavDemo() {
                             <Link
                               key={child.href}
                               href={child.href}
-                              onClick={() => setOpen(false)}
+                              onClick={handleClose}
                               className={`block rounded-lg px-3 py-2.5 text-sm transition ${
                                 active(child.href)
                                   ? "font-semibold text-blue-600 dark:text-blue-400"
@@ -194,7 +203,7 @@ export default function MobileNavDemo() {
                     <Link
                       key={item.href}
                       href={item.href}
-                      onClick={() => setOpen(false)}
+                      onClick={handleClose}
                       className={`flex items-center gap-3 rounded-xl px-3 py-3 text-sm transition-colors duration-200 ${
                         active(item.href)
                           ? "bg-blue-50 font-semibold text-blue-700 dark:bg-blue-950/60 dark:text-blue-300"
@@ -237,7 +246,6 @@ export default function MobileNavDemo() {
     </header>
   );
 }
-
 // "use client";
 
 // import { useTheme } from "next-themes";
