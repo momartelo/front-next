@@ -93,11 +93,19 @@ export default function CombustiblesSection({ combustibles }) {
                       {e.empresa || key}
                     </span>
                   </div>
-                  {e.manual && (
-                    <span className="text-[9px] bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 px-1.5 py-0.5 rounded font-medium border border-amber-200/40">
-                      Manual
-                    </span>
-                  )}
+
+                  {/* Badges de Estado / Fuente */}
+                  <div className="flex items-center gap-1">
+                    {e.manual ? (
+                      <span className="text-[9px] bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 px-1.5 py-0.5 rounded font-medium border border-amber-200/40">
+                        Manual
+                      </span>
+                    ) : (
+                      <span className="text-[9px] bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 px-1.5 py-0.5 rounded font-mono uppercase border border-slate-200/40">
+                        {e.fuente || "api"}
+                      </span>
+                    )}
+                  </div>
                 </div>
 
                 <div className="space-y-1 text-xs">
